@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { dashboardService } from '@/services/dashboardService';
-import type { DashboardData } from '@/types/dashboard';
+import type { DashboardData, DateRangePreset } from '@/types/dashboard';
 
 export const useDashboardData = () => {
+  const [selectedRange, setSelectedRange] = useState<DateRangePreset>('1M');
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -11,7 +12,8 @@ export const useDashboardData = () => {
     const load = async () => {
       try {
         setLoading(true);
-        setData(await dashboardService.getDashboardData());
+        setError('');
+        setData(await dashboardService.getDashboardData(selectedRange));
       } catch {
         setError('Unable to load dashboard data.');
       } finally {
@@ -19,7 +21,7 @@ export const useDashboardData = () => {
       }
     };
     load();
-  }, []);
+  }, [selectedRange]);
 
-  return { data, loading, error };
+  return { data, loading, error, selectedRange, setSelectedRange };
 };

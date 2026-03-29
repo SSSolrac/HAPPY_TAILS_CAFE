@@ -12,12 +12,17 @@ export const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <div className="flex">
-        <aside className="hidden md:block w-56 min-h-screen border-r bg-white dark:bg-slate-800 p-4 space-y-2">
+        <aside className="hidden md:block w-64 min-h-screen border-r bg-white dark:bg-slate-800 p-4 space-y-2">
           <h2 className="font-semibold mb-3">Staffowner</h2>
           <Link className="block" to="/dashboard">Dashboard</Link>
-          <Link className="block" to="/profile">Profile</Link>
+          <Link className="block" to="/orders">Orders</Link>
+          <Link className="block" to="/daily-menu">Daily Menu</Link>
+          <Link className="block" to="/menu">Menu</Link>
+          <Link className="block" to="/customers">Customers / Loyalty</Link>
+          <Link className="block" to="/imports">Imports / Reports</Link>
           <Link className="block" to="/settings">Settings</Link>
-          {isOwner && <Link className="block" to="/admin/activity-log">Activity Log</Link>}
+          <Link className="block" to="/profile">Profile</Link>
+          {isOwner && <Link className="block" to="/admin/activity-log">Admin Logs</Link>}
           {isOwner && <Link className="block" to="/admin/login-history">Login History</Link>}
         </aside>
         <section className="flex-1">
@@ -28,7 +33,7 @@ export const DashboardLayout = () => {
                 <Sun className="h-4 w-4 inline dark:hidden" />
                 <Moon className="h-4 w-4 hidden dark:inline" />
               </button>
-              <button className="relative" onClick={() => toast.info('You have 3 new notifications')}>
+              <button className="relative" onClick={() => toast.info('Operational alerts are available in Dashboard Overview')}>
                 <Bell className="h-4 w-4" />
                 <span className="absolute -top-1 -right-2 text-[10px] bg-indigo-600 text-white rounded-full px-1">3</span>
               </button>

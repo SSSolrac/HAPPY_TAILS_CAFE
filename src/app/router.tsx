@@ -6,6 +6,11 @@ import { ProfilePage } from '@/pages/ProfilePage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { ActivityLogPage } from '@/pages/admin/ActivityLogPage';
 import { LoginHistoryPage } from '@/pages/admin/LoginHistoryPage';
+import { OrdersPage } from '@/pages/orders/OrdersPage';
+import { DailyMenuPage } from '@/pages/menu/DailyMenuPage';
+import { MenuManagementPage } from '@/pages/menu/MenuManagementPage';
+import { CustomersLoyaltyPage } from '@/pages/customers/CustomersLoyaltyPage';
+import { ImportsReportsPage } from '@/pages/imports/ImportsReportsPage';
 import { useAuth } from '@/hooks/useAuth';
 
 const ProtectedRoute = ({ ownerOnly = false, children }: { ownerOnly?: boolean; children: React.ReactNode }) => {
@@ -23,6 +28,11 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
+      { path: 'orders', element: <OrdersPage /> },
+      { path: 'daily-menu', element: <DailyMenuPage /> },
+      { path: 'menu', element: <MenuManagementPage /> },
+      { path: 'customers', element: <CustomersLoyaltyPage /> },
+      { path: 'imports', element: <ImportsReportsPage /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'admin/activity-log', element: <ProtectedRoute ownerOnly><ActivityLogPage /></ProtectedRoute> },
