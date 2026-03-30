@@ -1,3 +1,4 @@
+import { loyaltyApi } from '@/api/loyalty';
 import type { Order } from '@/types/order';
 import {
   LOYALTY_MILESTONES,
@@ -93,8 +94,9 @@ export const loyaltyService = {
       };
     }
 
-    const stampedAt = new Date().toISOString();
-    stampedOrders.set(order.id, stampedAt);
+  async grantManualStamp(customerId: string, reason?: string): Promise<LoyaltyStampResult> {
+    return loyaltyApi.grantManualStamp(customerId, reason);
+  },
 
     const card = upsertCard(order.customerId);
     const activity: LoyaltyActivityEntry = {

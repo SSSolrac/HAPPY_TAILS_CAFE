@@ -7,7 +7,7 @@ import { loyaltyService } from '@/services/loyaltyService';
 import { formatCurrency } from '@/utils/currency';
 import type { LoyaltyStampState, Order, OrderStatus } from '@/types/order';
 
-const statuses: Array<OrderStatus | 'all'> = ['all', 'pending', 'preparing', 'ready', 'completed', 'cancelled', 'refunded', 'out-for-delivery', 'delivered'];
+const statuses: Array<OrderStatus | 'all'> = ['all', 'pending', 'preparing', 'ready', 'completed', 'cancelled', 'refunded', 'out_for_delivery', 'delivered'];
 
 const getLoyaltyState = (order: Order): LoyaltyStampState => {
   if (order.loyaltyStampStatus === 'stamp-awarded') return 'granted';
@@ -75,14 +75,14 @@ export const OrdersPage = () => {
               const paid = order.paymentStatus === 'paid';
               const loyaltyState = getLoyaltyState(order);
               return (
-                <tr className="border-t" key={order.id}>
-                  <td className="font-medium">{order.id}</td>
+                <tr className="border-t" key={order.orderNumber}>
+                  <td className="font-medium">{order.orderNumber}</td>
                   <td>{order.customerName}</td>
                   <td>{order.items.reduce((sum, item) => sum + item.qty, 0)} items</td>
                   <td>{formatCurrency(order.total)}</td>
                   <td>
                     <div className="flex items-center gap-2">
-                      <StatusChip label={order.status.replaceAll('-', ' ')} tone={statusTone(order.status)} />
+                      <StatusChip label={order.status.replaceAll('_', ' ')} tone={statusTone(order.status)} />
                       <select className="border rounded px-2 py-1" value={order.status} onChange={async (e) => { await updateStatus(order.id, e.target.value as OrderStatus); toast.success('Order status updated.'); }}>
                         {statuses.filter((value) => value !== 'all').map((value) => <option key={value} value={value}>{value}</option>)}
                       </select>
@@ -130,7 +130,7 @@ export const OrdersPage = () => {
                 <p><strong>Email:</strong> {selectedOrder.customerEmail ?? 'Not provided'}</p>
                 <p><strong>Phone:</strong> {selectedOrder.customerPhone ?? 'Not provided'}</p>
                 <p><strong>Created:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
-                <p className="capitalize"><strong>Payment:</strong> {selectedOrder.paymentStatus} via {selectedOrder.paymentMethod}</p>
+                <p className="capitalize"><strong>Payment:</strong> {selectedOrder.paymentStatus} via {selectedOrder.paymentMethod.replace('_', '-')}</p>
                 <p><strong>Loyalty:</strong> {loyaltyLabel[getLoyaltyState(selectedOrder)]}</p>
                 <p><strong>Loyalty Source:</strong> {selectedOrder.loyaltyStampedBy === 'automatic-order-confirmation' ? 'Automatic from order confirmation' : 'Not yet stamped'}</p>
                 <p><strong>Loyalty Note:</strong> {selectedOrder.loyaltyMessage ?? 'No loyalty activity yet.'}</p>
@@ -139,17 +139,17 @@ export const OrdersPage = () => {
 
               <div className="border rounded p-3 space-y-2 text-sm">
                 <p className="font-medium">Amount Breakdown</p>
-                {selectedOrder.items.map((item) => <p key={item.name}>{item.qty} × {item.name} · {formatCurrency(item.qty * item.unitPrice)}</p>)}
+                {selectedOrder.items.map((item) => <p key={item.itemName}>{item.qty} × {item.itemName} · {formatCurrency(item.qty * item.unitPrice)}</p>)}
                 <p>Service fee: {formatCurrency(selectedOrder.serviceFee ?? 0)}</p>
                 <p>Discount: -{formatCurrency(selectedOrder.discount ?? 0)}</p>
                 <p className="font-semibold">Grand total: {formatCurrency(selectedOrder.total)}</p>
               </div>
             </div>
 
-            {selectedOrder.paymentMethod === 'e-wallet' && (
+            {selectedOrder.paymentMethod === 'e_wallet' && (
               <div className="border rounded p-3">
                 <p className="font-medium text-sm mb-2">Payment proof preview</p>
-                {selectedOrder.paymentProofUrl ? <img src={selectedOrder.paymentProofUrl} alt="Payment proof" className="h-36 rounded border object-cover" /> : <p className="text-sm text-[#6B7280]">No proof attached yet.</p>}
+                {selectedOrder.receiptImageUrl ? <img src={selectedOrder.receiptImageUrl} alt="Payment proof" className="h-36 rounded border object-cover" /> : <p className="text-sm text-[#6B7280]">No proof attached yet.</p>}
               </div>
             )}
 
@@ -157,9 +157,9 @@ export const OrdersPage = () => {
               <p className="font-medium text-sm mb-2">Status timeline</p>
               <div className="space-y-2 text-sm">
                 {selectedOrder.statusHistory.map((event, index) => (
-                  <div key={`${event.at}-${event.status}-${index}`} className="border-l-2 pl-3">
-                    <p className="capitalize font-medium">{event.status.replaceAll('-', ' ')}</p>
-                    <p className="text-[#6B7280]">{new Date(event.at).toLocaleString()}</p>
+                  <div key={`${event.changedAt}-${event.status}-${index}`} className="border-l-2 pl-3">
+                    <p className="capitalize font-medium">{event.status.replaceAll('_', ' ')}</p>
+                    <p className="text-[#6B7280]">{new Date(event.changedAt).toLocaleString()}</p>
                     {event.note && <p className="text-[#6B7280]">{event.note}</p>}
                   </div>
                 ))}
