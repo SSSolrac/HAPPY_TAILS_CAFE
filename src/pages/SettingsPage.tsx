@@ -9,7 +9,6 @@ export const SettingsPage = () => {
   const [address, setAddress] = useState('123 Ortigas Ave, Pasig City, Metro Manila');
   const [logoUrl, setLogoUrl] = useState('');
   const [enableCash, setEnableCash] = useState(true);
-  const [enableCard, setEnableCard] = useState(true);
   const [enableWallet, setEnableWallet] = useState(true);
   const [dineIn, setDineIn] = useState(true);
   const [takeAway, setTakeAway] = useState(true);
@@ -37,7 +36,7 @@ export const SettingsPage = () => {
 
       <section className="rounded-lg border bg-white dark:bg-slate-800 p-4 space-y-3">
         <h3 className="font-medium">Payment & Service Rules</h3>
-        <div className="flex flex-wrap gap-4 text-sm"><label><input type="checkbox" checked={enableCash} onChange={(e) => setEnableCash(e.target.checked)} /> Cash</label><label><input type="checkbox" checked={enableCard} onChange={(e) => setEnableCard(e.target.checked)} /> Card</label><label><input type="checkbox" checked={enableWallet} onChange={(e) => setEnableWallet(e.target.checked)} /> E-Wallet</label></div>
+        <div className="flex flex-wrap gap-4 text-sm"><label><input type="checkbox" checked={enableCash} onChange={(e) => setEnableCash(e.target.checked)} /> Cash</label><label><input type="checkbox" checked={enableWallet} onChange={(e) => setEnableWallet(e.target.checked)} /> Maya / GCash (E-Wallet)</label></div>
         <div className="grid md:grid-cols-3 gap-3">
           <label className="text-sm">Service Fee (%)<input type="number" min={0} className="block border rounded mt-1 px-2 py-1 w-full" value={serviceFeePct} onChange={(e) => setServiceFeePct(Number(e.target.value))} /></label>
           <label className="text-sm">Tax (%)<input type="number" min={0} className="block border rounded mt-1 px-2 py-1 w-full" value={taxPct} onChange={(e) => setTaxPct(Number(e.target.value))} /></label>

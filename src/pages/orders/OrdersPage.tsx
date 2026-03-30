@@ -23,6 +23,12 @@ const loyaltyLabel: Record<LoyaltyStampState, string> = {
   'already-stamped': 'Already stamped',
 };
 
+
+const paymentMethodLabel = (method: Order['paymentMethod']) => {
+  if (method === 'e_wallet') return 'Maya / GCash';
+  return 'Cash';
+};
+
 const statusTone = (status: OrderStatus) => {
   if (status === 'completed' || status === 'delivered') return 'success';
   if (status === 'cancelled' || status === 'refunded') return 'danger';
@@ -87,7 +93,7 @@ export const OrdersPage = () => {
                       </select>
                     </div>
                   </td>
-                  <td><StatusChip label={`${order.paymentStatus} · ${order.paymentMethod}`} tone={paid ? 'success' : 'warning'} /></td>
+                  <td><StatusChip label={`${order.paymentStatus} · ${paymentMethodLabel(order.paymentMethod)}`} tone={paid ? 'success' : 'warning'} /></td>
                   <td>
                     <div>
                       <p>{loyaltyLabel[loyaltyState]}</p>
