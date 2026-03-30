@@ -7,10 +7,16 @@ export const useCustomers = () => {
   const [loading, setLoading] = useState(true);
 
   const loadCustomers = useCallback(async () => {
-    setLoading(true);
-    const rows = await customerService.getCustomers();
-    setCustomers(rows);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const rows = await customerService.getCustomers();
+      setCustomers(rows);
+    } catch (loadError) {
+      console.error('Failed to load customers', loadError);
+      setCustomers([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {

@@ -1,4 +1,10 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+const resolveApiBaseUrl = () => {
+  const env = import.meta.env as Record<string, string | undefined>;
+  const configured = env.VITE_API_BASE_URL ?? env.VITE_BACKEND_URL ?? env.VITE_API_URL;
+  return configured?.replace(/\/$/, '') ?? '';
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export class ApiError extends Error {
   status: number;
@@ -26,11 +32,24 @@ const buildUrl = (path: string, query?: Record<string, string | number | undefin
 
 const parseResponse = async <T>(response: Response): Promise<T> => {
   const text = await response.text();
-  const payload = text ? JSON.parse(text) : null;
+  let payload: unknown = null;
+
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = text;
+    }
+  }
 
   if (!response.ok) {
-    const message = (payload && typeof payload === 'object' && 'message' in payload ? String(payload.message) : response.statusText) || 'Request failed';
-    throw new ApiError(message, response.status);
+    const payloadMessage = payload && typeof payload === 'object' && 'message' in payload
+      ? String((payload as { message: unknown }).message)
+      : typeof payload === 'string'
+        ? payload
+        : response.statusText;
+
+    throw new ApiError(payloadMessage || 'Request failed', response.status);
   }
 
   return payload as T;

@@ -12,7 +12,8 @@ export const useMenuItems = () => {
       setLoading(true);
       setError('');
       setItems(await menuService.getMenuItems());
-    } catch {
+    } catch (loadError) {
+      console.error('Failed to load menu items', loadError);
       setError('Unable to load menu items.');
     } finally {
       setLoading(false);

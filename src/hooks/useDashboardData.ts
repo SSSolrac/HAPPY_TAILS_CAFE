@@ -13,13 +13,15 @@ export const useDashboardData = () => {
       try {
         setLoading(true);
         setError('');
-        setData(await dashboardService.getDashboardSummary());
-      } catch {
+        setData(await dashboardService.getDashboardData(selectedRange));
+      } catch (loadError) {
+        console.error('Failed to load dashboard data', loadError);
         setError('Unable to load dashboard data.');
       } finally {
         setLoading(false);
       }
     };
+
     load();
   }, [selectedRange]);
 

@@ -16,7 +16,8 @@ export const useOrders = () => {
       setLoading(true);
       setError('');
       setOrders(await orderService.getOrders({ query, status, range }));
-    } catch {
+    } catch (loadError) {
+      console.error('Failed to load orders', loadError);
       setError('Unable to load orders.');
     } finally {
       setLoading(false);

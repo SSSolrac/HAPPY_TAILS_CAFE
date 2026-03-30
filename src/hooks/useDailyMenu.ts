@@ -13,7 +13,8 @@ export const useDailyMenu = () => {
       setLoading(true);
       setError('');
       setMenu(await dailyMenuService.getCurrentDailyMenu());
-    } catch {
+    } catch (loadError) {
+      console.error('Failed to load daily menu', loadError);
       setError('Unable to load daily menu.');
     } finally {
       setLoading(false);
