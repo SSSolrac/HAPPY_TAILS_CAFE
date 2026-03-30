@@ -1,18 +1,33 @@
+import { customersApi } from '@/api/customers';
+import { loyaltyService } from '@/services/loyaltyService';
 import type { Customer } from '@/types/customer';
 import { getCustomerTier } from '@/utils/tier';
 
-const customersSeed = [
-  { id: 'c1', name: 'Avery Johnson', email: 'avery@example.com', points: 1200 },
-  { id: 'c2', name: 'Nora Lin', email: 'nora@example.com', points: 760 },
-  { id: 'c3', name: 'Leo Adams', email: 'leo@example.com', points: 430 },
-  { id: 'c4', name: 'Mia Turner', email: 'mia@example.com', points: 20 },
-  { id: 'c5', name: 'Carlos Vega', email: 'carlos@example.com', points: 560 },
-  { id: 'c6', name: 'Sam Brooks', email: 'sam@example.com', points: 90 },
-];
+const normalizeCustomer = (customer: Partial<Customer>): Customer => ({
+  id: customer.id ?? '',
+  name: customer.name ?? 'Unknown Customer',
+  email: customer.email ?? '',
+  points: Number(customer.points ?? 0),
+  tier: customer.tier ?? getCustomerTier(Number(customer.points ?? 0)),
+  loyalty: customer.loyalty as Customer['loyalty'],
+});
 
 export const customerService = {
   async getCustomers(): Promise<Customer[]> {
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    return customersSeed.map((customer) => ({ ...customer, tier: getCustomerTier(customer.points) }));
+    const customers = await customersApi.list();
+    const enriched = await Promise.all(customers.map(async (customer) => {
+      const loyalty = await loyaltyService.getCustomerLoyalty(customer.id);
+      return normalizeCustomer({ ...customer, loyalty, tier: getCustomerTier(Number(customer.points ?? 0)) });
+    }));
+
+    return enriched;
+  },
+
+  async grantManualLoyaltyStamp(customerId: string, reason?: string): Promise<Customer> {
+    await loyaltyService.grantManualStamp(customerId, reason);
+    const customers = await this.getCustomers();
+    const customer = customers.find((entry) => entry.id === customerId);
+    if (!customer) throw new Error('Customer not found');
+    return customer;
   },
 };

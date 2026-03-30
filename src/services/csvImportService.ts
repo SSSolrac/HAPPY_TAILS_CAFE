@@ -66,10 +66,13 @@ export const csvImportService = {
   },
 
   async importCsvData(type: CsvImportType, rows: Record<string, string>[]): Promise<{ imported: number }> {
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    const response = await fetch('/api/imports/csv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ type, rows }),
+    });
 
-    // TODO(csv-import-api): send `type` and row payload to database-backed import endpoint.
-    // TODO(csv-import-api): return row-level import errors from backend validator.
-    return { imported: rows.length };
+    if (!response.ok) throw new Error('CSV import failed');
+    return response.json() as Promise<{ imported: number }>;
   },
 };

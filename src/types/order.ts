@@ -1,48 +1,69 @@
 import type { DateRangePreset } from './dashboard';
+import type { LoyaltyRewardName } from './loyalty';
 
-export type PaymentStatus = 'pending' | 'paid';
-export type PaymentMethod = 'cash' | 'card' | 'e-wallet';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type PaymentMethod = 'cash' | 'card' | 'e_wallet';
+
+export type OrderType = 'dine_in' | 'pickup' | 'takeout' | 'delivery';
 
 export type OrderStatus =
   | 'pending'
   | 'preparing'
   | 'ready'
+  | 'out_for_delivery'
   | 'completed'
+  | 'delivered'
   | 'cancelled'
-  | 'refunded'
-  | 'out-for-delivery'
-  | 'delivered';
+  | 'refunded';
 
 export type OrderItem = {
-  name: string;
+  id: string;
+  orderId: string;
+  menuItemId?: string;
+  itemName: string;
   qty: number;
   unitPrice: number;
+  lineTotal: number;
 };
 
 export type OrderStatusHistoryItem = {
+  id: string;
+  orderId: string;
   status: OrderStatus;
-  at: string;
   note?: string;
+  changedByUserId?: string;
+  changedAt: string;
 };
+
+export type OrderLoyaltyStatus = 'not-eligible' | 'eligible' | 'stamp-awarded' | 'already-stamped';
 
 export type Order = {
   id: string;
+  orderNumber: string;
   customerId?: string;
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
+  customerAddress?: string;
+  orderType: OrderType;
   items: OrderItem[];
+  subtotal: number;
+  serviceFee: number;
+  discount: number;
   total: number;
-  serviceFee?: number;
-  discount?: number;
   status: OrderStatus;
   statusHistory: OrderStatusHistoryItem[];
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
-  paymentProofUrl?: string;
+  receiptImageUrl?: string;
   createdAt: string;
+  updatedAt: string;
   notes?: string;
-  loyaltyStampPreparedAt?: string;
+  loyaltyStampStatus?: OrderLoyaltyStatus;
+  loyaltyStampedAt?: string;
+  loyaltyStampedBy?: 'automatic-order-confirmation' | 'manual-staff-adjustment';
+  loyaltyMessage?: string;
+  loyaltyUnlockedRewards?: LoyaltyRewardName[];
 };
 
 export type OrderFilters = {

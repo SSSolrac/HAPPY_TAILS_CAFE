@@ -1,34 +1,34 @@
+import { loyaltyApi } from '@/api/loyalty';
 import type { Order } from '@/types/order';
-
-const stampedOrders = new Map<string, string>();
+import type { CustomerLoyalty, LoyaltyStampResult, LoyaltyUnlockedReward } from '@/types/loyalty';
 
 export const loyaltyService = {
-  canGrantLoyaltyStamp(order: Order): boolean {
+  canGrantStamp(order: Order): boolean {
     return order.paymentStatus === 'paid' && Boolean(order.customerId);
   },
 
-  hasAlreadyBeenStamped(order: Order): boolean {
-    return stampedOrders.has(order.id);
+  hasOrderAlreadyBeenStamped(orderOrId: Order | string): boolean {
+    if (typeof orderOrId === 'string') return false;
+    return orderOrId.loyaltyStampStatus === 'already-stamped';
   },
 
-  grantLoyaltyStamp(order: Order): { granted: boolean; stampedAt?: string; reason?: string } {
-    if (!this.canGrantLoyaltyStamp(order)) {
-      return { granted: false, reason: 'Order is not eligible for loyalty stamping.' };
-    }
+  evaluateRewardMilestones(customerLoyalty: CustomerLoyalty): LoyaltyUnlockedReward[] {
+    return customerLoyalty.unlockedRewards;
+  },
 
-    if (this.hasAlreadyBeenStamped(order)) {
-      return {
-        granted: false,
-        stampedAt: stampedOrders.get(order.id),
-        reason: 'Order has already been stamped.',
-      };
-    }
+  async hasOrderAlreadyBeenStampedById(orderId: string): Promise<boolean> {
+    return loyaltyApi.hasOrderAlreadyBeenStamped(orderId);
+  },
 
-    const stampedAt = new Date().toISOString();
-    stampedOrders.set(order.id, stampedAt);
+  async grantStampForConfirmedOrder(order: Order): Promise<LoyaltyStampResult> {
+    return loyaltyApi.grantOrderStamp(order.id);
+  },
 
-    // TODO(loyalty-integration): Replace this in-memory store with shared persistence/API.
-    // TODO(loyalty-integration): Connect stamped order to real customer loyalty card in customer system.
-    return { granted: true, stampedAt };
+  async grantManualStamp(customerId: string, reason?: string): Promise<LoyaltyStampResult> {
+    return loyaltyApi.grantManualStamp(customerId, reason);
+  },
+
+  async getCustomerLoyalty(customerId: string): Promise<CustomerLoyalty> {
+    return loyaltyApi.getCustomerLoyalty(customerId);
   },
 };
