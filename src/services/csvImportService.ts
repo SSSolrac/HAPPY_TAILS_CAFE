@@ -1,4 +1,5 @@
 import type { CsvImportType, CsvValidationResult } from '@/types/dashboard';
+import { apiClient } from '@/api/client';
 
 const splitCsvLine = (line: string): string[] => {
   const values: string[] = [];
@@ -66,13 +67,6 @@ export const csvImportService = {
   },
 
   async importCsvData(type: CsvImportType, rows: Record<string, string>[]): Promise<{ imported: number }> {
-    const response = await fetch('/api/imports/csv', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ type, rows }),
-    });
-
-    if (!response.ok) throw new Error('CSV import failed');
-    return response.json() as Promise<{ imported: number }>;
+    return apiClient.post<{ imported: number }>('/api/imports/csv', { type, rows });
   },
 };

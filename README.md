@@ -55,3 +55,10 @@ src/
 - `owner@happytails.com` (role: owner)
 - `staff@happytails.com` (role: staff)
 - Any non-empty password for demo mode
+
+## API Configuration
+
+This UI expects a backend that serves endpoints under `/api/*` (dashboard, orders, menu, customers, etc.).
+
+- **Local dev without a backend:** the app uses a built-in mock API by default when running `npm run dev` (or set `VITE_USE_MOCK_API=true`).
+- **Connect a real backend:** set `VITE_API_BASE_URL` (e.g. in `.env.local`) to your API origin (example: `VITE_API_BASE_URL=http://localhost:3000`).
