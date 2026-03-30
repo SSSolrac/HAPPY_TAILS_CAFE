@@ -35,11 +35,6 @@ export const useOrders = () => {
     return updated;
   }, []);
 
-  const updateNotes = useCallback(async (orderId: string, notes: string) => {
-    const updated = await orderService.updateOrderNotes(orderId, notes);
-    setOrders((rows) => rows.map((order) => (order.id === orderId ? updated : order)));
-    return updated;
-  }, []);
 
   useEffect(() => {
     loadOrders();
@@ -57,7 +52,6 @@ export const useOrders = () => {
     setRange,
     confirmPayment,
     updateStatus,
-    updateNotes,
     refresh: loadOrders,
   };
 };

@@ -31,7 +31,7 @@ const statusTone = (status: OrderStatus) => {
 };
 
 export const OrdersPage = () => {
-  const { orders, loading, error, query, status, range, setQuery, setStatus, setRange, confirmPayment, updateStatus, updateNotes } = useOrders();
+  const { orders, loading, error, query, status, range, setQuery, setStatus, setRange, confirmPayment, updateStatus } = useOrders();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [noteDraft, setNoteDraft] = useState('');
 
@@ -169,7 +169,7 @@ export const OrdersPage = () => {
             <div>
               <p className="font-medium text-sm mb-1">Internal order notes</p>
               <textarea className="border rounded w-full px-2 py-1 text-sm" rows={4} value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} />
-              <p className="text-xs text-[#6B7280] mt-1">Notes are visible to authorized staff and saved in this mock environment.</p>
+              <p className="text-xs text-[#6B7280] mt-1">Notes are shown from order data. Editing requires a dedicated backend endpoint.</p>
             </div>
 
             <div className="flex gap-2">
