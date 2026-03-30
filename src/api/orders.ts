@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Order, OrderFilters, OrderItem, OrderStatus, OrderStatusHistory, PaymentMethod, PaymentStatus } from '@/types/order';
+import type { Order, OrderFilters, OrderItem, OrderStatus, OrderStatusHistoryItem, PaymentMethod, PaymentStatus } from '@/types/order';
 
 type CanonicalOrderResponse = Partial<Order> & {
   id: string;
@@ -8,8 +8,7 @@ type CanonicalOrderResponse = Partial<Order> & {
   paymentMethod?: string;
   paymentStatus?: string;
   items?: Array<Partial<OrderItem>>;
-  statusTimeline?: Array<Partial<OrderStatusHistory>>;
-  statusHistory?: Array<Partial<OrderStatusHistory>>;
+  statusHistory?: Array<Partial<OrderStatusHistoryItem>>;
 };
 
 const allowedStatuses: OrderStatus[] = ['pending', 'preparing', 'ready', 'out_for_delivery', 'completed', 'delivered', 'cancelled', 'refunded'];
@@ -32,7 +31,6 @@ const normalizePaymentStatus = (status: string | undefined): PaymentStatus => {
 };
 
 const mapOrderItem = (orderId: string, index: number, item: Partial<OrderItem>): OrderItem => {
-  const itemName = (item as { name?: string }).name ?? item.itemName ?? '';
   const qty = Number(item.qty ?? 0);
   const unitPrice = Number(item.unitPrice ?? 0);
   const lineTotal = Number(item.lineTotal ?? qty * unitPrice);
@@ -40,20 +38,20 @@ const mapOrderItem = (orderId: string, index: number, item: Partial<OrderItem>):
   return {
     id: item.id ?? `${orderId}-item-${index + 1}`,
     orderId,
-    menuItemId: item.menuItemId ?? null,
-    itemName,
+    menuItemId: item.menuItemId,
+    itemName: item.itemName ?? '',
     qty,
     unitPrice,
     lineTotal,
   };
 };
 
-const mapStatusTimeline = (orderId: string, index: number, event: Partial<OrderStatusHistory>): OrderStatusHistory => ({
+const mapStatusHistory = (orderId: string, index: number, event: Partial<OrderStatusHistoryItem>): OrderStatusHistoryItem => ({
   id: event.id ?? `${orderId}-status-${index + 1}`,
   orderId,
   status: normalizeStatus(event.status),
-  note: event.note ?? null,
-  changedByUserId: event.changedByUserId ?? null,
+  note: event.note,
+  changedByUserId: event.changedByUserId,
   changedAt: event.changedAt ?? new Date().toISOString(),
 });
 
@@ -66,11 +64,11 @@ const mapOrder = (raw: CanonicalOrderResponse): Order => {
   return {
     id: raw.id,
     orderNumber: raw.orderNumber ?? raw.id,
-    customerId: raw.customerId ?? null,
+    customerId: raw.customerId,
     customerName: raw.customerName ?? 'Unknown',
-    customerEmail: raw.customerEmail ?? null,
-    customerPhone: raw.customerPhone ?? null,
-    customerAddress: raw.customerAddress ?? null,
+    customerEmail: raw.customerEmail,
+    customerPhone: raw.customerPhone,
+    customerAddress: raw.customerAddress,
     orderType: raw.orderType ?? 'pickup',
     items: (raw.items ?? []).map((item, index) => mapOrderItem(raw.id, index, item)),
     subtotal,
@@ -78,13 +76,13 @@ const mapOrder = (raw: CanonicalOrderResponse): Order => {
     discount,
     total,
     status: normalizeStatus(raw.status),
-    statusTimeline: (raw.statusTimeline ?? raw.statusHistory ?? []).map((event, index) => mapStatusTimeline(raw.id, index, event)),
+    statusHistory: (raw.statusHistory ?? []).map((event, index) => mapStatusHistory(raw.id, index, event)),
     paymentStatus: normalizePaymentStatus(raw.paymentStatus),
     paymentMethod: normalizePaymentMethod(raw.paymentMethod),
-    receiptImageUrl: raw.receiptImageUrl ?? null,
+    receiptImageUrl: raw.receiptImageUrl,
     createdAt: raw.createdAt ?? new Date().toISOString(),
     updatedAt: raw.updatedAt ?? raw.createdAt ?? new Date().toISOString(),
-    notes: raw.notes ?? null,
+    notes: raw.notes,
     loyaltyStampStatus: raw.loyaltyStampStatus,
     loyaltyStampedAt: raw.loyaltyStampedAt,
     loyaltyStampedBy: raw.loyaltyStampedBy,
@@ -98,17 +96,13 @@ export const ordersApi = {
     const rows = await apiClient.get<CanonicalOrderResponse[]>('/api/orders', {
       query: filters?.query,
       status: filters?.status && filters.status !== 'all' ? filters.status : undefined,
+      range: filters?.range,
     });
     return rows.map(mapOrder);
   },
 
-  async getById(orderId: string): Promise<Order> {
-    const row = await apiClient.get<CanonicalOrderResponse>(`/api/orders/${orderId}`);
-    return mapOrder(row);
-  },
-
-  async create(order: Order): Promise<Order> {
-    const row = await apiClient.post<CanonicalOrderResponse>('/api/orders', order);
+  async confirmPayment(orderId: string): Promise<Order> {
+    const row = await apiClient.post<CanonicalOrderResponse>(`/api/orders/${orderId}/confirm-payment`);
     return mapOrder(row);
   },
 
@@ -117,17 +111,8 @@ export const ordersApi = {
     return mapOrder(row);
   },
 
-  async updatePayment(orderId: string, paymentStatus: PaymentStatus): Promise<Order> {
-    const row = await apiClient.patch<CanonicalOrderResponse>(`/api/orders/${orderId}/payment`, { paymentStatus });
+  async updateNotes(orderId: string, notes: string): Promise<Order> {
+    const row = await apiClient.patch<CanonicalOrderResponse>(`/api/orders/${orderId}/notes`, { notes });
     return mapOrder(row);
-  },
-  async updateNotes(orderId: string, notes: string | null): Promise<Order> {
-    const row = await apiClient.patch<CanonicalOrderResponse>(`/api/orders/${orderId}`, { notes });
-    return mapOrder(row);
-  },
-
-  async getHistory(orderId: string): Promise<OrderStatusHistory[]> {
-    const rows = await apiClient.get<Array<Partial<OrderStatusHistory>>>(`/api/orders/${orderId}/history`);
-    return rows.map((event, index) => mapStatusTimeline(orderId, index, event));
   },
 };

@@ -1,5 +1,4 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
-const DEFAULT_TIMEOUT_MS = 12000;
 
 export class ApiError extends Error {
   status: number;
@@ -37,44 +36,55 @@ const parseResponse = async <T>(response: Response): Promise<T> => {
   return payload as T;
 };
 
-const request = async <T>(method: string, path: string, body?: unknown, query?: Record<string, string | number | undefined>, init?: RequestInit): Promise<T> => {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
-
-  try {
+export const apiClient = {
+  async get<T>(path: string, query?: Record<string, string | number | undefined>, init?: RequestInit): Promise<T> {
     const response = await fetch(buildUrl(path, query), {
-      method,
-      headers: { Accept: 'application/json', ...(body === undefined ? {} : { 'Content-Type': 'application/json' }), ...(init?.headers ?? {}) },
+      method: 'GET',
+      headers: { Accept: 'application/json', ...(init?.headers ?? {}) },
+      ...init,
+    });
+    return parseResponse<T>(response);
+  },
+
+  async post<T>(path: string, body?: unknown, init?: RequestInit): Promise<T> {
+    const response = await fetch(buildUrl(path), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(init?.headers ?? {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
-      signal: controller.signal,
+      ...init,
+    });
+    return parseResponse<T>(response);
+  },
+
+  async put<T>(path: string, body?: unknown, init?: RequestInit): Promise<T> {
+    const response = await fetch(buildUrl(path), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(init?.headers ?? {}) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      ...init,
+    });
+    return parseResponse<T>(response);
+  },
+
+  async patch<T>(path: string, body?: unknown, init?: RequestInit): Promise<T> {
+    const response = await fetch(buildUrl(path), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(init?.headers ?? {}) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      ...init,
+    });
+    return parseResponse<T>(response);
+  },
+
+  async delete(path: string, init?: RequestInit): Promise<void> {
+    const response = await fetch(buildUrl(path), {
+      method: 'DELETE',
+      headers: { Accept: 'application/json', ...(init?.headers ?? {}) },
       ...init,
     });
 
-    return parseResponse<T>(response);
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new ApiError('Request timed out', 408);
+    if (!response.ok) {
+      throw new ApiError(response.statusText || 'Request failed', response.status);
     }
-    throw error;
-  } finally {
-    window.clearTimeout(timeoutId);
-  }
-};
-
-export const apiClient = {
-  get<T>(path: string, query?: Record<string, string | number | undefined>, init?: RequestInit): Promise<T> {
-    return request<T>('GET', path, undefined, query, init);
-  },
-  post<T>(path: string, body?: unknown, init?: RequestInit): Promise<T> {
-    return request<T>('POST', path, body, undefined, init);
-  },
-  put<T>(path: string, body?: unknown, init?: RequestInit): Promise<T> {
-    return request<T>('PUT', path, body, undefined, init);
-  },
-  patch<T>(path: string, body?: unknown, init?: RequestInit): Promise<T> {
-    return request<T>('PATCH', path, body, undefined, init);
-  },
-  delete(path: string, init?: RequestInit): Promise<void> {
-    return request<void>('DELETE', path, undefined, undefined, init);
   },
 };

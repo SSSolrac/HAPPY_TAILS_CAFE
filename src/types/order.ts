@@ -1,4 +1,5 @@
 import type { DateRangePreset } from './dashboard';
+import type { LoyaltyRewardName } from './loyalty';
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type PaymentMethod = 'cash' | 'card' | 'e_wallet';
@@ -18,19 +19,19 @@ export type OrderStatus =
 export type OrderItem = {
   id: string;
   orderId: string;
-  menuItemId?: string | null;
+  menuItemId?: string;
   itemName: string;
   qty: number;
   unitPrice: number;
   lineTotal: number;
 };
 
-export type OrderStatusHistory = {
+export type OrderStatusHistoryItem = {
   id: string;
   orderId: string;
   status: OrderStatus;
-  note?: string | null;
-  changedByUserId?: string | null;
+  note?: string;
+  changedByUserId?: string;
   changedAt: string;
 };
 
@@ -39,11 +40,11 @@ export type OrderLoyaltyStatus = 'not-eligible' | 'eligible' | 'stamp-awarded' |
 export type Order = {
   id: string;
   orderNumber: string;
-  customerId?: string | null;
+  customerId?: string;
   customerName: string;
-  customerEmail?: string | null;
-  customerPhone?: string | null;
-  customerAddress?: string | null;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerAddress?: string;
   orderType: OrderType;
   items: OrderItem[];
   subtotal: number;
@@ -54,15 +55,16 @@ export type Order = {
   statusTimeline?: OrderStatusHistory[];
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
-  receiptImageUrl?: string | null;
+  receiptImageUrl?: string;
   createdAt: string;
   updatedAt: string;
-  notes?: string | null;
+  notes?: string;
+  loyaltyStampPreparedAt?: string;
   loyaltyStampStatus?: OrderLoyaltyStatus;
   loyaltyStampedAt?: string;
   loyaltyStampedBy?: 'automatic-order-confirmation' | 'manual-staff-adjustment';
   loyaltyMessage?: string;
-  loyaltyUnlockedRewards?: string[];
+  loyaltyUnlockedRewards?: LoyaltyRewardName[];
 };
 
 export type OrderFilters = {

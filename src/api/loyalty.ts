@@ -1,9 +1,9 @@
 import { apiClient } from './client';
-import type { LoyaltyAccount, LoyaltyStampResult } from '@/types/loyalty';
+import type { CustomerLoyalty, LoyaltyStampResult } from '@/types/loyalty';
 
 export const loyaltyApi = {
-  async getLoyaltyAccount(customerId: string): Promise<LoyaltyAccount> {
-    return apiClient.get<LoyaltyAccount>(`/api/loyalty/${customerId}`);
+  async getCustomerLoyalty(customerId: string): Promise<CustomerLoyalty> {
+    return apiClient.get<CustomerLoyalty>(`/api/loyalty/${customerId}`);
   },
 
   async grantManualStamp(customerId: string, reason?: string): Promise<LoyaltyStampResult> {

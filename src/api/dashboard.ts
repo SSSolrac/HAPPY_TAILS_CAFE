@@ -1,8 +1,8 @@
 import { apiClient } from './client';
-import type { DashboardSummary } from '@/types/dashboard';
+import type { DashboardData, DateRangePreset } from '@/types/dashboard';
 
 export const dashboardApi = {
-  getDashboardSummary(): Promise<DashboardSummary> {
-    return apiClient.get<DashboardSummary>('/api/dashboard/summary');
+  async getDashboardData(range: DateRangePreset): Promise<DashboardData> {
+    return apiClient.get<DashboardData>('/api/dashboard', { range });
   },
 };

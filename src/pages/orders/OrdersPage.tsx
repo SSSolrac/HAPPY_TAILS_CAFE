@@ -156,7 +156,7 @@ export const OrdersPage = () => {
             <div className="border rounded p-3">
               <p className="font-medium text-sm mb-2">Status timeline</p>
               <div className="space-y-2 text-sm">
-                {(selectedOrder.statusTimeline ?? []).map((event, index) => (
+                {selectedOrder.statusHistory.map((event, index) => (
                   <div key={`${event.changedAt}-${event.status}-${index}`} className="border-l-2 pl-3">
                     <p className="capitalize font-medium">{event.status.replaceAll('_', ' ')}</p>
                     <p className="text-[#6B7280]">{new Date(event.changedAt).toLocaleString()}</p>
