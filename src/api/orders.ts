@@ -10,6 +10,7 @@ import type {
   PaymentMethod,
   PaymentStatus,
 } from '@/types/order';
+import { normalizePaymentMethod } from '@/utils/payment';
 
 type CanonicalOrderResponse = Partial<Order> & {
   id: string;
@@ -31,7 +32,7 @@ type CanonicalOrderResponse = Partial<Order> & {
 
 const allowedStatuses: OrderStatus[] = ['pending', 'preparing', 'ready', 'out_for_delivery', 'completed', 'delivered', 'cancelled', 'refunded'];
 const allowedOrderTypes: OrderType[] = ['dine_in', 'pickup', 'takeout', 'delivery'];
-const allowedPaymentMethods: PaymentMethod[] = ['cash', 'e_wallet'];
+const allowedPaymentMethods: PaymentMethod[] = ['qrph', 'gcash', 'maribank', 'bdo'];
 const allowedPaymentStatuses: PaymentStatus[] = ['pending', 'paid', 'failed', 'refunded'];
 
 const normalizeStatus = (status: string | undefined): OrderStatus => {
@@ -44,9 +45,9 @@ const normalizeOrderType = (orderType: string | undefined): OrderType => {
   return allowedOrderTypes.includes(normalized) ? normalized : 'pickup';
 };
 
-const normalizePaymentMethod = (method: string | undefined): PaymentMethod => {
-  const normalized = (method ?? 'cash').replaceAll('-', '_') as PaymentMethod;
-  return allowedPaymentMethods.includes(normalized) ? normalized : 'cash';
+const normalizeOrderPaymentMethod = (method: string | undefined): PaymentMethod => {
+  const normalized = normalizePaymentMethod(method);
+  return allowedPaymentMethods.includes(normalized) ? normalized : 'qrph';
 };
 
 const normalizePaymentStatus = (status: string | undefined): PaymentStatus => {
@@ -109,7 +110,7 @@ export const mapOrder = (raw: CanonicalOrderResponse): Order => {
     status: normalizeStatus(raw.status),
     statusTimeline: rawTimeline.map((event, index) => mapStatusTimeline(raw.id, index, event)),
     paymentStatus: normalizePaymentStatus(raw.paymentStatus ?? raw.payment_status),
-    paymentMethod: normalizePaymentMethod(raw.paymentMethod ?? raw.payment_method),
+    paymentMethod: normalizeOrderPaymentMethod(raw.paymentMethod ?? raw.payment_method),
     receiptImageUrl: raw.receiptImageUrl ?? (row.receipt_image_url ? String(row.receipt_image_url) : undefined),
     createdAt: raw.createdAt ?? (row.created_at ? String(row.created_at) : new Date().toISOString()),
     updatedAt: raw.updatedAt ?? (row.updated_at ? String(row.updated_at) : raw.createdAt ?? new Date().toISOString()),

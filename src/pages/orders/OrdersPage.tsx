@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { DateRangeFilter } from '@/components/dashboard';
-import { StatusChip } from '@/components/ui';
+import { PaymentQrPreview, StatusChip } from '@/components/ui';
 import { useOrders } from '@/hooks/useOrders';
 import { loyaltyService } from '@/services/loyaltyService';
+import { paymentMethodToLabel } from '@/utils/payment';
 import { formatCurrency } from '@/utils/currency';
 import type { LoyaltyStampState, Order, OrderStatus } from '@/types/order';
 
@@ -21,12 +22,6 @@ const loyaltyLabel: Record<LoyaltyStampState, string> = {
   eligible: 'Loyalty eligible',
   granted: 'Stamp awarded',
   'already-stamped': 'Already stamped',
-};
-
-
-const paymentMethodLabel = (method: Order['paymentMethod']) => {
-  if (method === 'e_wallet') return 'Maya / GCash';
-  return 'Cash';
 };
 
 const statusTone = (status: OrderStatus) => {
@@ -93,7 +88,7 @@ export const OrdersPage = () => {
                       </select>
                     </div>
                   </td>
-                  <td><StatusChip label={`${order.paymentStatus} · ${paymentMethodLabel(order.paymentMethod)}`} tone={paid ? 'success' : 'warning'} /></td>
+                  <td><StatusChip label={`${order.paymentStatus} · ${paymentMethodToLabel(order.paymentMethod)}`} tone={paid ? 'success' : 'warning'} /></td>
                   <td>
                     <div>
                       <p>{loyaltyLabel[loyaltyState]}</p>
@@ -135,7 +130,7 @@ export const OrdersPage = () => {
                 <p><strong>Email:</strong> {selectedOrder.customerEmail ?? 'Not provided'}</p>
                 <p><strong>Phone:</strong> {selectedOrder.customerPhone ?? 'Not provided'}</p>
                 <p><strong>Created:</strong> {new Date(selectedOrder.createdAt).toLocaleString()}</p>
-                <p className="capitalize"><strong>Payment:</strong> {selectedOrder.paymentStatus} via {selectedOrder.paymentMethod}</p>
+                <p className="capitalize"><strong>Payment:</strong> {selectedOrder.paymentStatus} via {paymentMethodToLabel(selectedOrder.paymentMethod)}</p>
                 <p><strong>Loyalty:</strong> {loyaltyLabel[getLoyaltyState(selectedOrder)]}</p>
                 <p><strong>Loyalty Source:</strong> {selectedOrder.loyaltyStampedBy === 'automatic-order-confirmation' ? 'Automatic from order confirmation' : 'Not yet stamped'}</p>
                 <p><strong>Loyalty Note:</strong> {selectedOrder.loyaltyMessage ?? 'No loyalty activity yet.'}</p>
@@ -151,12 +146,13 @@ export const OrdersPage = () => {
               </div>
             </div>
 
-            {selectedOrder.paymentMethod === 'e_wallet' && (
-              <div className="border rounded p-3">
+            <div className="border rounded p-3 grid md:grid-cols-2 gap-3 items-start">
+              <PaymentQrPreview paymentMethod={selectedOrder.paymentMethod} />
+              <div>
                 <p className="font-medium text-sm mb-2">Payment proof preview</p>
                 {selectedOrder.receiptImageUrl ? <img src={selectedOrder.receiptImageUrl} alt="Payment proof" className="h-36 rounded border object-cover" /> : <p className="text-sm text-[#6B7280]">No proof attached yet.</p>}
               </div>
-            )}
+            </div>
 
             <div className="border rounded p-3">
               <p className="font-medium text-sm mb-2">Status timeline</p>

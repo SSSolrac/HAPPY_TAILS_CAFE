@@ -2,7 +2,7 @@ import type { DateRangePreset } from './dashboard';
 import type { LoyaltyRewardName } from './loyalty';
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
-export type PaymentMethod = 'cash' | 'e_wallet';
+export type PaymentMethod = 'qrph' | 'gcash' | 'maribank' | 'bdo';
 
 export type OrderType = 'dine_in' | 'pickup' | 'takeout' | 'delivery';
 
