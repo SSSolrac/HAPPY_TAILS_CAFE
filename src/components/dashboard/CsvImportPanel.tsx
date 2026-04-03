@@ -14,7 +14,7 @@ const options: Array<{ value: CsvImportType; label: string }> = [
 const templates: Record<CsvImportType, string> = {
   sales: 'date,sales_total,orders_count\n2026-04-01,12340,84',
   orders: 'order_id,customer_name,total,status,payment_method',
-  customers: 'customer_id,name,email,points,tier',
+  customers: 'customer_id,name,email,current_stamp_count,total_stamps_earned',
   'menu-items': 'item_id,name,category,price,is_available,is_featured',
 };
 
