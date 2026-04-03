@@ -8,3 +8,5 @@ export * from './loyaltyService';
 export * from './dailyMenuService';
 export * from './csvImportService';
 export * from './menuService';
+
+export * from './notificationService';

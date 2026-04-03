@@ -31,7 +31,22 @@ export type DashboardSummary = {
   };
 };
 
-export type CsvImportType = 'orders' | 'customers' | 'menu-items';
+export type TrendPoint = {
+  label: string;
+  sales: number;
+};
+
+export type SalesImportMergeResult = {
+  added: number;
+  updated: number;
+  skipped: number;
+  affectedDateRange?: {
+    start: string;
+    end: string;
+  };
+};
+
+export type CsvImportType = 'orders' | 'customers' | 'menu-items' | 'sales';
 
 export type CsvValidationResult = {
   validRows: Record<string, string>[];

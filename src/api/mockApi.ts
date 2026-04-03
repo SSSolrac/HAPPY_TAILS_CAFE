@@ -1,11 +1,12 @@
 import { LOYALTY_MILESTONES, LOYALTY_TOTAL_STAMPS } from '@/types/loyalty';
 import type { CustomerProfile, LoyaltyAccount } from '@/types/customer';
 import type { DailyMenu } from '@/types/dailyMenu';
-import type { DashboardSummary, DateRangePreset } from '@/types/dashboard';
+import type { DashboardSummary, DateRangePreset, SalesImportMergeResult } from '@/types/dashboard';
 import type { LoginHistoryEntry } from '@/types/loginHistory';
 import type { MenuItem } from '@/types/menuItem';
 import type { Order, OrderItem, OrderStatus, PaymentMethod, PaymentStatus } from '@/types/order';
 import type { SessionUser, UserRole } from '@/types/user';
+import { computeInventoryStatus } from '@/utils/inventory';
 import { asRecord } from './response';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -31,6 +32,7 @@ type MockDb = {
   loyalty: Record<string, LoyaltyAccount>;
   loginHistory: LoginHistoryEntry[];
   profile: MockProfile;
+  importedSales: Record<string, { sales: number; orders: number }>;
 };
 
 let db: MockDb | null = null;
@@ -40,7 +42,7 @@ const nowIso = () => new Date().toISOString();
 const today = () => nowIso().slice(0, 10);
 const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
-const makeMenuItem = (id: string, name: string, categoryId: string, price: number): MenuItem => ({
+const makeMenuItem = (id: string, name: string, categoryId: string, price: number, stock = 20, lowStockThreshold = 6): MenuItem => ({
   id,
   name,
   categoryId,
@@ -48,6 +50,10 @@ const makeMenuItem = (id: string, name: string, categoryId: string, price: numbe
   price,
   isAvailable: true,
   imageUrl: '',
+  stock,
+  lowStockThreshold,
+  inventoryStatus: computeInventoryStatus(stock, lowStockThreshold),
+  discount: null,
   createdAt: daysAgo(30),
   updatedAt: daysAgo(1),
 });
@@ -124,10 +130,10 @@ const makeOrder = (payload: {
 
 const seedDb = (): MockDb => {
   const menuItems = [
-    makeMenuItem('mi-001', 'Cafe Latte', 'coffee', 150),
-    makeMenuItem('mi-002', 'Cappuccino', 'coffee', 140),
-    makeMenuItem('mi-003', 'Butter Croissant', 'pastry', 90),
-    makeMenuItem('mi-004', 'Chicken Pesto Sandwich', 'sandwich', 210),
+    makeMenuItem('mi-001', 'Cafe Latte', 'coffee', 150, 24, 8),
+    makeMenuItem('mi-002', 'Cappuccino', 'coffee', 140, 7, 6),
+    makeMenuItem('mi-003', 'Butter Croissant', 'pastry', 90, 3, 5),
+    makeMenuItem('mi-004', 'Chicken Pesto Sandwich', 'sandwich', 210, 0, 4),
   ];
 
   const customers = [
@@ -214,7 +220,7 @@ const seedDb = (): MockDb => {
     updatedAt: daysAgo(1),
   };
 
-  return { menuItems, dailyMenu, orders, customers, loyalty, loginHistory, profile };
+  return { menuItems, dailyMenu, orders, customers, loyalty, loginHistory, profile, importedSales: {} };
 };
 
 const getDb = () => (db ??= seedDb());
@@ -255,14 +261,29 @@ const computeDashboard = (range: DateRangePreset, data: MockDb): DashboardSummar
   }, { ...baseStatusSummary });
 
   const paidOrders = inRange.filter((order) => order.paymentStatus === 'paid');
-  const sumTotals = (rows: Order[]) => rows.reduce((sum, row) => sum + row.total, 0);
   const withinDays = (rows: Order[], days: number) => {
     const cutoffMs = Date.now() - days * 24 * 60 * 60 * 1000;
     return rows.filter((row) => new Date(row.createdAt).getTime() >= cutoffMs);
   };
 
+  const orderDailyTotals = paidOrders.reduce<Record<string, number>>((acc, order) => {
+    const dateKey = order.createdAt.slice(0, 10);
+    acc[dateKey] = (acc[dateKey] ?? 0) + order.total;
+    return acc;
+  }, {});
+
+  Object.entries(data.importedSales).forEach(([date, value]) => {
+    if (new Date(date).getTime() >= cutoff) orderDailyTotals[date] = value.sales;
+  });
+
+  const nowMs = Date.now();
+  const sumWithinDays = (days: number) => Object.entries(orderDailyTotals).reduce((sum, [date, amount]) => {
+    const time = new Date(`${date}T00:00:00.000Z`).getTime();
+    return time >= nowMs - days * 24 * 60 * 60 * 1000 ? sum + amount : sum;
+  }, 0);
+
   const monthlyRows = withinDays(paidOrders, 30);
-  const monthlySales = sumTotals(monthlyRows);
+  const monthlySales = sumWithinDays(30);
 
   const itemAgg = new Map<string, { itemName: string; qtySold: number; revenue: number }>();
   paidOrders.forEach((order) => {
@@ -276,8 +297,8 @@ const computeDashboard = (range: DateRangePreset, data: MockDb): DashboardSummar
 
   return {
     salesSummary: {
-      todaySales: sumTotals(paidOrders.filter((row) => row.createdAt.startsWith(today()))),
-      weeklySales: sumTotals(withinDays(paidOrders, 7)),
+      todaySales: orderDailyTotals[today()] ?? 0,
+      weeklySales: sumWithinDays(7),
       monthlySales,
       averageOrderValue: monthlyRows.length ? monthlySales / monthlyRows.length : 0,
     },
@@ -457,6 +478,10 @@ export const mockApi = {
         price: toNumber(payload.price, 0),
         isAvailable: typeof payload.isAvailable === 'boolean' ? payload.isAvailable : true,
         imageUrl: typeof payload.imageUrl === 'string' ? payload.imageUrl : '',
+        stock: toNumber(payload.stock, 0),
+        lowStockThreshold: toNumber(payload.lowStockThreshold, 5),
+        inventoryStatus: computeInventoryStatus(toNumber(payload.stock, 0), toNumber(payload.lowStockThreshold, 5)),
+        discount: payload.discount && typeof payload.discount === 'object' ? (asRecord(payload.discount) as MenuItem['discount']) : null,
         createdAt: nowIso(),
         updatedAt: nowIso(),
       };
@@ -476,6 +501,10 @@ export const mockApi = {
         price: toNumber(payload.price, 0),
         isAvailable: typeof payload.isAvailable === 'boolean' ? payload.isAvailable : true,
         imageUrl: typeof payload.imageUrl === 'string' ? payload.imageUrl : '',
+        stock: toNumber(payload.stock, 0),
+        lowStockThreshold: toNumber(payload.lowStockThreshold, 5),
+        inventoryStatus: computeInventoryStatus(toNumber(payload.stock, 0), toNumber(payload.lowStockThreshold, 5)),
+        discount: payload.discount && typeof payload.discount === 'object' ? (asRecord(payload.discount) as MenuItem['discount']) : null,
         createdAt: typeof payload.createdAt === 'string' ? payload.createdAt : nowIso(),
         updatedAt: nowIso(),
       };
@@ -572,6 +601,43 @@ export const mockApi = {
     if (method === 'POST' && normalizedPath === '/api/imports/csv') {
       const payload = asRecord(body) ?? {};
       const rows = Array.isArray(payload.rows) ? payload.rows : [];
+      const type = typeof payload.type === 'string' ? payload.type : 'orders';
+
+      if (type === 'sales') {
+        let added = 0;
+        let updated = 0;
+        let skipped = 0;
+        const dates: string[] = [];
+
+        rows.forEach((row) => {
+          const record = asRecord(row) ?? {};
+          const date = typeof record.date === 'string' ? record.date : '';
+          const sales = Number(record.sales_total ?? record.sales ?? 0);
+          const orders = Number(record.orders_count ?? record.orders ?? 0);
+
+          if (!date || Number.isNaN(sales)) {
+            skipped += 1;
+            return;
+          }
+
+          if (data.importedSales[date]) updated += 1;
+          else added += 1;
+
+          data.importedSales[date] = { sales, orders: Number.isFinite(orders) ? orders : 0 };
+          dates.push(date);
+        });
+
+        const sortedDates = [...dates].sort();
+        const result: SalesImportMergeResult = {
+          added,
+          updated,
+          skipped,
+          affectedDateRange: sortedDates.length ? { start: sortedDates[0], end: sortedDates[sortedDates.length - 1] } : undefined,
+        };
+
+        return clone(result) as T;
+      }
+
       return clone({ imported: rows.length }) as T;
     }
 

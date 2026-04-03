@@ -1,4 +1,4 @@
-import type { CsvImportType, CsvValidationResult } from '@/types/dashboard';
+import type { CsvImportType, CsvValidationResult, SalesImportMergeResult } from '@/types/dashboard';
 import { apiClient } from '@/api/client';
 
 const splitCsvLine = (line: string): string[] => {
@@ -44,6 +44,7 @@ export const csvImportService = {
       orders: ['order_id', 'customer_name', 'total', 'status'],
       customers: ['customer_id', 'name', 'email'],
       'menu-items': ['item_name', 'category', 'price'],
+      sales: ['date', 'sales_total'],
     };
 
     const required = requiredColumns[type];
@@ -60,13 +61,22 @@ export const csvImportService = {
         });
         return;
       }
+
+      if (type === 'sales') {
+        const amount = Number(row.sales_total ?? row.sales);
+        if (!Number.isFinite(amount) || amount < 0) {
+          invalidRows.push({ rowNumber: index + 2, reason: 'sales_total must be a positive number.', row });
+          return;
+        }
+      }
+
       validRows.push(row);
     });
 
     return { validRows, invalidRows };
   },
 
-  async importCsvData(type: CsvImportType, rows: Record<string, string>[]): Promise<{ imported: number }> {
-    return apiClient.post<{ imported: number }>('/api/imports/csv', { type, rows });
+  async importCsvData(type: CsvImportType, rows: Record<string, string>[]): Promise<{ imported: number } | SalesImportMergeResult> {
+    return apiClient.post<{ imported: number } | SalesImportMergeResult>('/api/imports/csv', { type, rows });
   },
 };

@@ -6,3 +6,5 @@ export * from './useLoginHistory';
 export * from './useOrders';
 export * from './useDailyMenu';
 export * from './useMenuItems';
+
+export * from './useNotifications';

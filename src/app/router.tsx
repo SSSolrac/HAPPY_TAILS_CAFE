@@ -32,7 +32,7 @@ export const router = createBrowserRouter([
       { path: 'daily-menu', element: <DailyMenuPage /> },
       { path: 'menu', element: <MenuManagementPage /> },
       { path: 'customers', element: <CustomersLoyaltyPage /> },
-      { path: 'imports', element: <ImportsReportsPage /> },
+      { path: 'imports', element: <ProtectedRoute ownerOnly><ImportsReportsPage /></ProtectedRoute> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'admin/activity-log', element: <ProtectedRoute ownerOnly><ActivityLogPage /></ProtectedRoute> },

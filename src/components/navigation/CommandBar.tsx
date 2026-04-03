@@ -1,22 +1,25 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-
-const links = [
-  { label: 'Dashboard', path: '/dashboard' },
-  { label: 'Orders', path: '/orders' },
-  { label: 'Daily Menu', path: '/daily-menu' },
-  { label: 'Menu', path: '/menu' },
-  { label: 'Customers / Loyalty', path: '/customers' },
-  { label: 'Imports / Reports', path: '/imports' },
-  { label: 'Settings', path: '/settings' },
-  { label: 'Profile', path: '/profile' },
-  { label: 'Admin Logs', path: '/admin/activity-log' },
-  { label: 'Login History', path: '/admin/login-history' },
-];
+import { useAuth } from '@/hooks/useAuth';
 
 export const CommandBar = () => {
   const [query, setQuery] = useState('');
-  const filtered = useMemo(() => links.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())), [query]);
+  const { user } = useAuth();
+  const isOwner = user?.role === 'owner';
+
+  const links = useMemo(() => [
+    { label: 'Dashboard', path: '/dashboard' },
+    { label: 'Orders', path: '/orders' },
+    { label: 'Daily Menu', path: '/daily-menu' },
+    { label: 'Menu', path: '/menu' },
+    { label: 'Customers / Loyalty', path: '/customers' },
+    ...(isOwner ? [{ label: 'Imports / Reports', path: '/imports' }] : []),
+    { label: 'Settings', path: '/settings' },
+    { label: 'Profile', path: '/profile' },
+    ...(isOwner ? [{ label: 'Admin Logs', path: '/admin/activity-log' }, { label: 'Login History', path: '/admin/login-history' }] : []),
+  ], [isOwner]);
+
+  const filtered = useMemo(() => links.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())), [query, links]);
 
   return (
     <div className="relative">

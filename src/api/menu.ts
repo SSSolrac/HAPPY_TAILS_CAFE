@@ -2,9 +2,12 @@ import { apiClient } from './client';
 import { asRecord, unwrapArray, unwrapObject } from './response';
 import type { DailyMenu, DailyMenuItem } from '@/types/dailyMenu';
 import type { MenuItem } from '@/types/menuItem';
+import { clampStockValue, clampThresholdValue, computeInventoryStatus } from '@/utils/inventory';
 
 const mapMenuItem = (raw: unknown): MenuItem => {
   const row = asRecord(raw) ?? {};
+  const stock = clampStockValue(Number(row.stock ?? 0));
+  const lowStockThreshold = clampThresholdValue(Number(row.lowStockThreshold ?? row.low_stock_threshold ?? 5));
 
   return {
     id: String(row.id ?? ''),
@@ -14,6 +17,18 @@ const mapMenuItem = (raw: unknown): MenuItem => {
     price: Number(row.price ?? 0),
     isAvailable: Boolean(row.isAvailable ?? row.is_available ?? true),
     imageUrl: row.imageUrl ? String(row.imageUrl) : row.image_url ? String(row.image_url) : '',
+    stock,
+    lowStockThreshold,
+    inventoryStatus: computeInventoryStatus(stock, lowStockThreshold),
+    discount: row.discount && typeof row.discount === 'object'
+      ? {
+          type: 'percentage',
+          value: Number(asRecord(row.discount)?.value ?? 0),
+          isActive: Boolean(asRecord(row.discount)?.isActive ?? asRecord(row.discount)?.is_active ?? false),
+          startsAt: asRecord(row.discount)?.startsAt ? String(asRecord(row.discount)?.startsAt) : undefined,
+          endsAt: asRecord(row.discount)?.endsAt ? String(asRecord(row.discount)?.endsAt) : undefined,
+        }
+      : null,
     createdAt: String(row.createdAt ?? row.created_at ?? new Date().toISOString()),
     updatedAt: String(row.updatedAt ?? row.updated_at ?? row.createdAt ?? row.created_at ?? new Date().toISOString()),
   };
