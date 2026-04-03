@@ -9,7 +9,7 @@ const history = [
 ];
 
 export const ImportsReportsPage = () => {
-  const [range, setRange] = useState<DateRangePreset>('3M');
+  const [range, setRange] = useState<DateRangePreset>('90d');
 
   return (
     <div className="space-y-4">

@@ -1,9 +1,10 @@
 export type DailyMenuItem = {
   id: string;
-  dailyMenuId: string;
   menuItemId: string;
+  name: string;
+  price: number;
+  categoryId: string;
   isAvailable: boolean;
-  sortOrder: number;
 };
 
 export type DailyMenu = {

@@ -5,9 +5,9 @@ import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/types/user';
 
 export const LoginPage = () => {
-  const [email, setEmail] = useState('owner@happytails.com');
+  const [email, setEmail] = useState('admin@happytails.com');
   const [password, setPassword] = useState('password');
-  const [role, setRole] = useState<UserRole>('owner');
+  const [role, setRole] = useState<UserRole>('admin');
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -16,7 +16,7 @@ export const LoginPage = () => {
     try {
       await login(email, password, role);
       toast.success('Login successful');
-      navigate(role === 'owner' ? '/dashboard' : '/dashboard');
+      navigate(role === 'admin' ? '/dashboard' : '/dashboard');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Login failed');
     }
@@ -29,11 +29,11 @@ export const LoginPage = () => {
         <input className="w-full border rounded px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input className="w-full border rounded px-3 py-2" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <select className="w-full border rounded px-3 py-2" value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
-          <option value="owner">Owner</option>
+          <option value="admin">Admin</option>
           <option value="staff">Staff</option>
         </select>
         <button className="w-full rounded bg-[#FFB6C1] text-[#1F2937] py-2">Sign in</button>
-        <p className="text-xs text-[#6B7280]">Use owner@happytails.com or staff@happytails.com with any password.</p>
+        <p className="text-xs text-[#6B7280]">Use admin@happytails.com or staff@happytails.com with any password.</p>
       </form>
     </div>
   );

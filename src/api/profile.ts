@@ -1,22 +1,14 @@
 import { apiClient } from './client';
-
-export interface Profile {
-  id: string;
-  fullName: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  city?: string | null;
-  notes?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { unwrapDataObject } from './response';
+import type { CustomerProfile } from '@/types/customer';
 
 export const profileApi = {
-  getMe(): Promise<Profile> {
-    return apiClient.get<Profile>('/api/profile/me');
+  async getMe(): Promise<CustomerProfile> {
+    const payload = await apiClient.get<unknown>('/api/profile/me');
+    return unwrapDataObject<CustomerProfile>(payload);
   },
-  updateMe(payload: Partial<Profile>): Promise<Profile> {
-    return apiClient.put<Profile>('/api/profile/me', payload);
+  async updateMe(payload: Partial<CustomerProfile>): Promise<CustomerProfile> {
+    const result = await apiClient.put<unknown>('/api/profile/me', payload);
+    return unwrapDataObject<CustomerProfile>(result);
   },
 };

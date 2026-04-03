@@ -1,15 +1,41 @@
 import type { Order } from './order';
 
-export type DateRangePreset = '1M' | '3M' | '6M' | '1Y' | 'ALL';
+export type DateRangePreset = 'today' | '7d' | '30d' | '90d';
 
 export type DashboardSummary = {
-  salesSummary: {
+  sales: {
+    today: number;
+    rangeTotal: number;
+    averageOrderValue: number;
+  };
+  orders: {
+    total: number;
+    byStatus: {
+      pending: number;
+      preparing: number;
+      ready: number;
+      out_for_delivery: number;
+      completed: number;
+      delivered: number;
+      cancelled: number;
+      refunded: number;
+    };
+  };
+  topItems: Array<{
+    itemName: string;
+    qtySold: number;
+    revenue: number;
+  }>;
+  recentOrders: Order[];
+  alerts: Array<{ id: string; message: string; type: 'info' | 'warning' | 'error' }>;
+
+  salesSummary?: {
     todaySales: number;
     weeklySales: number;
     monthlySales: number;
     averageOrderValue: number;
   };
-  orderStatusSummary: {
+  orderStatusSummary?: {
     pending: number;
     preparing: number;
     ready: number;
@@ -19,13 +45,12 @@ export type DashboardSummary = {
     cancelled: number;
     refunded: number;
   };
-  recentOrders: Order[];
-  topSellingItems: Array<{
+  topSellingItems?: Array<{
     itemName: string;
     qtySold: number;
     revenue: number;
   }>;
-  customerSummary: {
+  customerSummary?: {
     totalCustomers: number;
     activeLoyaltyCustomers: number;
   };

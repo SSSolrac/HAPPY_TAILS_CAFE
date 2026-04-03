@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 const ProtectedRoute = ({ ownerOnly = false, children }: { ownerOnly?: boolean; children: React.ReactNode }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (ownerOnly && user.role !== 'owner') return <Navigate to="/dashboard" replace />;
+  if (ownerOnly && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 };
 

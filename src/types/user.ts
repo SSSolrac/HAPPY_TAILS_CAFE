@@ -1,4 +1,4 @@
-export type UserRole = 'owner' | 'staff' | 'customer';
+export type UserRole = 'admin' | 'staff' | 'customer';
 
 export interface User {
   id: string;
@@ -9,5 +9,5 @@ export interface User {
 }
 
 export interface SessionUser extends User {
-  token: string;
+  token?: string;
 }

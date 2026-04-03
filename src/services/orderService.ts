@@ -2,17 +2,16 @@ import { ordersApi } from '@/api/orders';
 import type { DateRangePreset } from '@/types/dashboard';
 import type { Order, OrderFilters, OrderStatus } from '@/types/order';
 
-const rangeToDays: Record<DateRangePreset, number> = { '1M': 30, '3M': 90, '6M': 180, '1Y': 365, ALL: 3650 };
+const rangeToDays: Record<DateRangePreset, number> = { today: 1, '7d': 7, '30d': 30, '90d': 90 };
 
 const byRange = (rows: Order[], range: DateRangePreset) => {
-  if (range === 'ALL') return rows;
   const cutoff = Date.now() - rangeToDays[range] * 24 * 60 * 60 * 1000;
   return rows.filter((row) => new Date(row.createdAt).getTime() >= cutoff);
 };
 
 export const orderService = {
   async getOrders(filters?: OrderFilters): Promise<Order[]> {
-    const range = filters?.range ?? '1M';
+    const range = filters?.range ?? '30d';
     let rows = await ordersApi.list(filters);
 
     rows = byRange(rows, range);

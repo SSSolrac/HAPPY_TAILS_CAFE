@@ -18,7 +18,7 @@ const defaultDraft: MenuItem = {
   stock: 0,
   lowStockThreshold: 5,
   inventoryStatus: 'out_of_stock',
-  discount: null,
+  discount: 0,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
@@ -124,13 +124,13 @@ export const MenuManagementPage = () => {
           <button className="border rounded px-2 py-1" onClick={async () => {
             if (discountValue <= 0 || discountValue > 100) return toast.error('Discount must be between 1 and 100%.');
             if (selectedItemIds.length === 0) return toast.error('Select at least one item.');
-            await Promise.all(items.filter((item) => selectedSet.has(item.id)).map((item) => saveItem({ ...item, discount: { type: 'percentage', value: discountValue, isActive: true }, updatedAt: new Date().toISOString() })));
+            await Promise.all(items.filter((item) => selectedSet.has(item.id)).map((item) => saveItem({ ...item, discount: discountValue, updatedAt: new Date().toISOString() })));
             notificationService.create({ type: 'promo_updated', title: 'Discount updated', message: `Discount ${discountValue}% applied to ${selectedItemIds.length} item(s).` });
             toast.success('Discount applied to selected items.');
           }}>Bulk apply discount</button>
           <button className="border rounded px-2 py-1" onClick={async () => {
             if (selectedItemIds.length === 0) return toast.error('Select at least one item.');
-            await Promise.all(items.filter((item) => selectedSet.has(item.id)).map((item) => saveItem({ ...item, discount: null, updatedAt: new Date().toISOString() })));
+            await Promise.all(items.filter((item) => selectedSet.has(item.id)).map((item) => saveItem({ ...item, discount: 0, updatedAt: new Date().toISOString() })));
             toast.success('Discount removed from selected items.');
           }}>Bulk remove discount</button>
         </div>
@@ -148,7 +148,7 @@ export const MenuManagementPage = () => {
                     <div className="flex gap-2 mt-1 flex-wrap">
                       <StatusChip label={item.isAvailable ? 'Available' : 'Unavailable'} tone={item.isAvailable ? 'success' : 'warning'} />
                       <StatusChip label={getInventoryStatusLabel(item.inventoryStatus)} tone={item.inventoryStatus === 'in_stock' ? 'success' : item.inventoryStatus === 'low_stock' ? 'warning' : 'danger'} />
-                      <StatusChip label={item.discount?.isActive ? `${item.discount.value}% OFF` : 'No discount'} tone={item.discount?.isActive ? 'warning' : 'neutral'} />
+                      <StatusChip label={item.discount > 0 ? `${item.discount}% OFF` : 'No discount'} tone={item.discount > 0 ? 'warning' : 'neutral'} />
                     </div>
                   </div>
                 </div>

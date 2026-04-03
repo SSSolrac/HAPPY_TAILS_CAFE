@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 export const CommandBar = () => {
   const [query, setQuery] = useState('');
   const { user } = useAuth();
-  const isOwner = user?.role === 'owner';
+  const isAdmin = user?.role === 'admin';
 
   const links = useMemo(() => [
     { label: 'Dashboard', path: '/dashboard' },
@@ -13,11 +13,11 @@ export const CommandBar = () => {
     { label: 'Daily Menu', path: '/daily-menu' },
     { label: 'Menu', path: '/menu' },
     { label: 'Customers / Loyalty', path: '/customers' },
-    ...(isOwner ? [{ label: 'Imports / Reports', path: '/imports' }] : []),
+    ...(isAdmin ? [{ label: 'Imports / Reports', path: '/imports' }] : []),
     { label: 'Settings', path: '/settings' },
     { label: 'Profile', path: '/profile' },
-    ...(isOwner ? [{ label: 'Admin Logs', path: '/admin/activity-log' }, { label: 'Login History', path: '/admin/login-history' }] : []),
-  ], [isOwner]);
+    ...(isAdmin ? [{ label: 'Admin Logs', path: '/admin/activity-log' }, { label: 'Login History', path: '/admin/login-history' }] : []),
+  ], [isAdmin]);
 
   const filtered = useMemo(() => links.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())), [query, links]);
 
