@@ -1,18 +1,24 @@
 import { apiClient } from './client';
+import { unwrapDataObject } from './response';
 import type { LoginHistoryEntry, LoginHistoryFilters } from '@/types/loginHistory';
 import type { SessionUser, UserRole } from '@/types/user';
 
+type LoginHistoryListResponse = { rows: LoginHistoryEntry[]; total: number };
+type LoginHistoryStats = { totalToday: number; failed: number; staff: number; customer: number };
+
 export const authApi = {
   async login(payload: { email: string; password: string; role: UserRole; device: string }): Promise<SessionUser> {
-    return apiClient.post<SessionUser>('/api/auth/login', payload);
+    const response = await apiClient.post<unknown>('/api/auth/login', payload);
+    return unwrapDataObject<SessionUser>(response);
   },
 
   async recordLoginHistory(entry: Omit<LoginHistoryEntry, 'id'>): Promise<LoginHistoryEntry> {
-    return apiClient.post<LoginHistoryEntry>('/api/auth/login-history', entry);
+    const response = await apiClient.post<unknown>('/api/auth/login-history', entry);
+    return unwrapDataObject<LoginHistoryEntry>(response);
   },
 
-  async listLoginHistory(filters: LoginHistoryFilters): Promise<{ rows: LoginHistoryEntry[]; total: number }> {
-    return apiClient.get<{ rows: LoginHistoryEntry[]; total: number }>('/api/auth/login-history', {
+  async listLoginHistory(filters: LoginHistoryFilters): Promise<LoginHistoryListResponse> {
+    const response = await apiClient.get<unknown>('/api/auth/login-history', {
       query: filters.query,
       role: filters.role,
       status: filters.status,
@@ -20,9 +26,11 @@ export const authApi = {
       page: filters.page,
       pageSize: filters.pageSize,
     });
+    return unwrapDataObject<LoginHistoryListResponse>(response);
   },
 
-  async loginHistoryStats(): Promise<{ totalToday: number; failed: number; staff: number; customer: number }> {
-    return apiClient.get<{ totalToday: number; failed: number; staff: number; customer: number }>('/api/auth/login-history/stats');
+  async loginHistoryStats(): Promise<LoginHistoryStats> {
+    const response = await apiClient.get<unknown>('/api/auth/login-history/stats');
+    return unwrapDataObject<LoginHistoryStats>(response);
   },
 };

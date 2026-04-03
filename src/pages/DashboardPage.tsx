@@ -20,17 +20,18 @@ export const DashboardPage = () => {
 
   const statusCards = useMemo(() => {
     if (!data) return [];
-    return Object.entries(data.orderStatusSummary).map(([status, total]) => ({ status, total }));
+    return [
+      { status: 'pending', total: data.orders.pending },
+      { status: 'preparing', total: data.orders.preparing },
+      { status: 'ready', total: data.orders.ready },
+      { status: 'out_for_delivery', total: data.orders.outForDelivery },
+      { status: 'completed', total: data.orders.completed },
+      { status: 'cancelled', total: data.orders.cancelled },
+    ];
   }, [data]);
 
   if (loading) return <p>Loading dashboard...</p>;
   if (error || !data) return <p className="text-red-600">{error || 'Error'}</p>;
-
-  const alerts = [
-    { id: 'alert-pending', tone: 'warning' as const, title: 'Pending orders', message: `${data.orderStatusSummary.pending} orders need attention.` },
-    { id: 'alert-refund', tone: 'danger' as const, title: 'Refunded orders', message: `${data.orderStatusSummary.refunded} refunded orders recorded.` },
-    { id: 'alert-ready', tone: 'info' as const, title: 'Ready for pickup', message: `${data.orderStatusSummary.ready} orders are ready.` },
-  ];
 
   return (
     <div className="space-y-4">
@@ -45,22 +46,21 @@ export const DashboardPage = () => {
       <DashboardTabs value={activeTab} onChange={setActiveTab}>
         {activeTab === 'overview' && (
           <div className="space-y-4">
-            <section className="grid md:grid-cols-5 gap-3">
-              <KPICard title="Today Sales" value={formatCurrency(data.salesSummary.todaySales)} subtitle="From dashboard summary" />
-              <KPICard title="Weekly Sales" value={formatCurrency(data.salesSummary.weeklySales)} subtitle="From dashboard summary" />
-              <KPICard title="Monthly Sales" value={formatCurrency(data.salesSummary.monthlySales)} subtitle="From dashboard summary" />
-              <KPICard title="Average Order Value" value={formatCurrency(data.salesSummary.averageOrderValue)} subtitle="From dashboard summary" />
-              <KPICard title="Active Loyalty Customers" value={String(data.customerSummary.activeLoyaltyCustomers)} subtitle="From dashboard summary" />
+            <section className="grid md:grid-cols-4 gap-3">
+              <KPICard title="Today Sales" value={formatCurrency(data.sales.today)} subtitle="From dashboard summary" />
+              <KPICard title="Range Sales" value={formatCurrency(data.sales.rangeTotal)} subtitle="From dashboard summary" />
+              <KPICard title="Average Order Value" value={formatCurrency(data.sales.averageOrderValue)} subtitle="From dashboard summary" />
+              <KPICard title="Orders in Range" value={String(data.orders.rangeTotal)} subtitle="From dashboard summary" />
             </section>
 
             <section className="grid lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2">
                 <TopItemsChart
                   title="Top Selling Items (Qty)"
-                  data={data.topSellingItems.map((item) => ({ label: item.itemName, value: item.qtySold }))}
+                  data={data.topItems.map((item) => ({ label: item.itemName, value: item.quantity }))}
                 />
               </div>
-              <AlertsPanel alerts={alerts} />
+              <AlertsPanel alerts={data.alerts} />
             </section>
           </div>
         )}
@@ -83,8 +83,8 @@ export const DashboardPage = () => {
         {activeTab === 'menu' && (
           <div className="space-y-4">
             <section className="grid lg:grid-cols-2 gap-4">
-              <DailyMenuPreview menuDate={new Date().toISOString().slice(0, 10)} isPublished items={data.topSellingItems.slice(0, 5).map((item) => item.itemName)} />
-              <TopItemsChart title="Top Item Revenue" data={data.topSellingItems.map((item) => ({ label: item.itemName, value: item.revenue }))} />
+              <DailyMenuPreview menuDate={new Date().toISOString().slice(0, 10)} isPublished items={data.topItems.slice(0, 5).map((item) => item.itemName)} />
+              <TopItemsChart title="Top Item Revenue" data={data.topItems.map((item) => ({ label: item.itemName, value: item.revenue }))} />
             </section>
             <Link className="inline-block border rounded px-3 py-1.5 text-sm" to="/daily-menu">Manage daily menu publishing</Link>
           </div>
@@ -93,8 +93,8 @@ export const DashboardPage = () => {
         {activeTab === 'customers' && (
           <div className="space-y-4">
             <section className="grid md:grid-cols-3 gap-3">
-              <KPICard title="Total Customers" value={String(data.customerSummary.totalCustomers)} subtitle="From dashboard summary" />
-              <KPICard title="Active Loyalty Customers" value={String(data.customerSummary.activeLoyaltyCustomers)} subtitle="From dashboard summary" />
+              <KPICard title="Orders Today" value={String(data.orders.today)} subtitle="From dashboard summary" />
+              <KPICard title="Orders in Range" value={String(data.orders.rangeTotal)} subtitle="From dashboard summary" />
               <KPICard title="Recent Orders" value={String(data.recentOrders.length)} subtitle="From dashboard summary" />
             </section>
             <Link className="inline-block border rounded px-3 py-1.5 text-sm" to="/customers">Open loyalty workspace</Link>
@@ -105,7 +105,7 @@ export const DashboardPage = () => {
           <div className="space-y-4">
             <section className="rounded-lg border bg-white dark:bg-slate-800 p-4 space-y-3">
               <h3 className="font-medium">Reporting Snapshot</h3>
-              <p className="text-sm text-[#6B7280]">Current monthly sales: {formatCurrency(data.salesSummary.monthlySales)}.</p>
+              <p className="text-sm text-[#6B7280]">Current range sales: {formatCurrency(data.sales.rangeTotal)}.</p>
               <p className="text-sm text-[#6B7280]">Use Imports & Reports for CSV uploads, validation, and import history.</p>
             </section>
             <Link className="inline-block border rounded px-3 py-1.5 text-sm" to="/imports">Go to imports & reports</Link>

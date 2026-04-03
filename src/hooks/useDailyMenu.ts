@@ -35,7 +35,8 @@ export const useDailyMenu = () => {
   const publish = useCallback(async (next: DailyMenu) => {
     setSaving(true);
     try {
-      const saved = await dailyMenuService.publishDailyMenu(next);
+      await dailyMenuService.saveDailyMenu(next);
+      const saved = await dailyMenuService.publishDailyMenu();
       setMenu(saved);
       return saved;
     } finally {

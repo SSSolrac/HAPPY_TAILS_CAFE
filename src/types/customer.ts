@@ -10,12 +10,17 @@ export interface CustomerProfile {
   updatedAt: string;
 }
 
+export interface Reward {
+  id: string;
+  label: string;
+  requiredStamps: number;
+}
+
 export interface LoyaltyAccount {
   customerId: string;
-  currentStampCount: number;
-  totalStampsEarned: number;
-  rewardsUnlocked: string[];
-  lastStampedOrderId?: string | null;
+  stampCount: number;
+  availableRewards: Reward[];
+  redeemedRewards: Reward[];
   updatedAt: string;
 }
 

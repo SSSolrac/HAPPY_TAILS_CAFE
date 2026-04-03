@@ -10,8 +10,8 @@ export const dailyMenuService = {
     return menuApi.saveDailyMenu(menu);
   },
 
-  async publishDailyMenu(menu: DailyMenu): Promise<DailyMenu> {
-    return menuApi.publishDailyMenu(menu);
+  async publishDailyMenu(): Promise<DailyMenu> {
+    return menuApi.publishDailyMenu();
   },
 
   async unpublishDailyMenu(): Promise<DailyMenu> {

@@ -35,16 +35,19 @@ export const DailyMenuPage = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-medium">Daily Menu Items</h3>
-            <button className="border rounded px-2 py-1" onClick={() => setDraft({ ...draft, items: [...draft.items, { id: `dmi-${makeId()}`, dailyMenuId: draft.id, menuItemId: '', isAvailable: true, sortOrder: draft.items.length + 1 }] })}>Add item</button>
+            <button className="border rounded px-2 py-1" onClick={() => setDraft({ ...draft, items: [...draft.items, { id: `dmi-${makeId()}`, menuItemId: '', name: '', price: 0, categoryId: '', isAvailable: true }] })}>Add item</button>
           </div>
           {draft.items.map((item, index) => (
             <div key={item.id} className="border rounded p-3 space-y-2">
               <label className="text-sm">Menu Item ID
                 <input className="block border rounded mt-1 px-2 py-1 w-full" value={item.menuItemId} onChange={(e) => setDraft({ ...draft, items: draft.items.map((x) => (x.id === item.id ? { ...x, menuItemId: e.target.value } : x)) })} />
               </label>
+              <label className="text-sm">Name
+                <input className="block border rounded mt-1 px-2 py-1 w-full" value={item.name} onChange={(e) => setDraft({ ...draft, items: draft.items.map((x) => (x.id === item.id ? { ...x, name: e.target.value } : x)) })} />
+              </label>
               <div className="flex items-center gap-3 text-sm">
                 <label><input type="checkbox" checked={item.isAvailable} onChange={(e) => setDraft({ ...draft, items: draft.items.map((x) => (x.id === item.id ? { ...x, isAvailable: e.target.checked } : x)) })} /> Available</label>
-                <button className="border rounded px-2 py-1" onClick={() => setDraft({ ...draft, items: draft.items.filter((x) => x.id !== item.id).map((x, i) => ({ ...x, sortOrder: i + 1 })) })}>Remove</button>
+                <button className="border rounded px-2 py-1" onClick={() => setDraft({ ...draft, items: draft.items.filter((x) => x.id !== item.id).map((x) => x) })}>Remove</button>
               </div>
               <p className="text-xs text-[#6B7280]">Sort order: {index + 1}</p>
             </div>

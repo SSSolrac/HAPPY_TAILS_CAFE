@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { asRecord, unwrapArray, unwrapObject } from './response';
+import { asRecord, unwrapDataArray, unwrapDataObject } from './response';
 import type { DailyMenu, DailyMenuItem } from '@/types/dailyMenu';
 import type { MenuItem } from '@/types/menuItem';
 import { clampStockValue, clampThresholdValue, computeInventoryStatus } from '@/utils/inventory';
@@ -7,89 +7,62 @@ import { clampStockValue, clampThresholdValue, computeInventoryStatus } from '@/
 const mapMenuItem = (raw: unknown): MenuItem => {
   const row = asRecord(raw) ?? {};
   const stock = clampStockValue(Number(row.stock ?? 0));
-  const lowStockThreshold = clampThresholdValue(Number(row.lowStockThreshold ?? row.low_stock_threshold ?? 5));
+  const lowStockThreshold = clampThresholdValue(Number(row.lowStockThreshold ?? 5));
+  const discount = Number(row.discount ?? 0);
 
   return {
     id: String(row.id ?? ''),
-    name: String(row.name ?? row.item_name ?? ''),
-    categoryId: String(row.categoryId ?? row.category_id ?? ''),
+    name: String(row.name ?? ''),
+    categoryId: String(row.categoryId ?? ''),
     description: row.description ? String(row.description) : '',
     price: Number(row.price ?? 0),
-    isAvailable: Boolean(row.isAvailable ?? row.is_available ?? true),
-    imageUrl: row.imageUrl ? String(row.imageUrl) : row.image_url ? String(row.image_url) : '',
+    isAvailable: Boolean(row.isAvailable ?? true),
+    imageUrl: row.imageUrl ? String(row.imageUrl) : null,
     stock,
     lowStockThreshold,
     inventoryStatus: computeInventoryStatus(stock, lowStockThreshold),
-    discount: row.discount && typeof row.discount === 'object'
-      ? {
-          type: 'percentage',
-          value: Number(asRecord(row.discount)?.value ?? 0),
-          isActive: Boolean(asRecord(row.discount)?.isActive ?? asRecord(row.discount)?.is_active ?? false),
-          startsAt: asRecord(row.discount)?.startsAt ? String(asRecord(row.discount)?.startsAt) : undefined,
-          endsAt: asRecord(row.discount)?.endsAt ? String(asRecord(row.discount)?.endsAt) : undefined,
-        }
-      : null,
-    createdAt: String(row.createdAt ?? row.created_at ?? new Date().toISOString()),
-    updatedAt: String(row.updatedAt ?? row.updated_at ?? row.createdAt ?? row.created_at ?? new Date().toISOString()),
+    discount,
+    createdAt: String(row.createdAt ?? new Date().toISOString()),
+    updatedAt: String(row.updatedAt ?? row.createdAt ?? new Date().toISOString()),
   };
 };
 
-const mapDailyMenuItem = (raw: unknown, index: number, dailyMenuId: string): DailyMenuItem => {
+const mapDailyMenuItem = (raw: unknown, index: number): DailyMenuItem => {
   const row = asRecord(raw) ?? {};
   return {
-    id: String(row.id ?? `${dailyMenuId}-item-${index + 1}`),
-    dailyMenuId: String(row.dailyMenuId ?? row.daily_menu_id ?? dailyMenuId),
-    menuItemId: String(row.menuItemId ?? row.menu_item_id ?? ''),
-    isAvailable: Boolean(row.isAvailable ?? row.is_available ?? true),
-    sortOrder: Number(row.sortOrder ?? row.sort_order ?? index + 1),
+    id: String(row.id ?? `dmi-${index + 1}`),
+    menuItemId: String(row.menuItemId ?? ''),
+    name: String(row.name ?? ''),
+    price: Number(row.price ?? 0),
+    categoryId: String(row.categoryId ?? ''),
+    isAvailable: Boolean(row.isAvailable ?? true),
   };
 };
 
 const mapDailyMenu = (raw: unknown): DailyMenu => {
   const row = asRecord(raw) ?? {};
-  const id = String(row.id ?? '');
-  const rawItems = row.items ?? row.dailyMenuItems ?? row.daily_menu_items;
-
+  const items = Array.isArray(row.items) ? row.items.map(mapDailyMenuItem) : [];
   return {
-    id,
-    menuDate: String(row.menuDate ?? row.menu_date ?? new Date().toISOString().slice(0, 10)),
-    isPublished: Boolean(row.isPublished ?? row.is_published ?? false),
-    createdAt: String(row.createdAt ?? row.created_at ?? new Date().toISOString()),
-    updatedAt: String(row.updatedAt ?? row.updated_at ?? row.createdAt ?? row.created_at ?? new Date().toISOString()),
-    items: Array.isArray(rawItems) ? rawItems.map((item, index) => mapDailyMenuItem(item, index, id)) : [],
-  };
-};
-
-const toDailyMenu = (payload: unknown): DailyMenu => {
-  const single = unwrapObject<unknown>(payload);
-  if (single) return mapDailyMenu(single);
-
-  const list = unwrapArray<unknown>(payload);
-  if (list.length > 0) return mapDailyMenu(list[0]);
-
-  return {
-    id: '',
-    menuDate: new Date().toISOString().slice(0, 10),
-    isPublished: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    items: [],
+    id: String(row.id ?? ''),
+    menuDate: String(row.menuDate ?? new Date().toISOString().slice(0, 10)),
+    isPublished: Boolean(row.isPublished ?? false),
+    createdAt: String(row.createdAt ?? new Date().toISOString()),
+    updatedAt: String(row.updatedAt ?? row.createdAt ?? new Date().toISOString()),
+    items,
   };
 };
 
 export const menuApi = {
   async listMenuItems(): Promise<MenuItem[]> {
     const payload = await apiClient.get<unknown>('/api/menu');
-    return unwrapArray<unknown>(payload).map(mapMenuItem);
+    return unwrapDataArray<unknown>(payload).map(mapMenuItem);
   },
 
   async saveMenuItem(item: MenuItem): Promise<MenuItem> {
     const payload = item.id
       ? await apiClient.put<unknown>(`/api/menu/${item.id}`, item)
       : await apiClient.post<unknown>('/api/menu', item);
-
-    const row = unwrapObject<unknown>(payload);
-    return mapMenuItem(row ?? payload);
+    return mapMenuItem(unwrapDataObject<unknown>(payload));
   },
 
   async deleteMenuItem(itemId: string): Promise<void> {
@@ -98,26 +71,26 @@ export const menuApi = {
 
   async getDailyMenu(): Promise<DailyMenu> {
     const payload = await apiClient.get<unknown>('/api/menu/daily');
-    return toDailyMenu(payload);
+    return mapDailyMenu(unwrapDataObject<unknown>(payload));
   },
 
   async saveDailyMenu(menu: DailyMenu): Promise<DailyMenu> {
     const payload = await apiClient.put<unknown>('/api/menu/daily', menu);
-    return toDailyMenu(payload);
+    return mapDailyMenu(unwrapDataObject<unknown>(payload));
   },
 
-  async publishDailyMenu(menu: DailyMenu): Promise<DailyMenu> {
-    const payload = await apiClient.post<unknown>('/api/menu/daily/publish', menu);
-    return toDailyMenu(payload);
+  async publishDailyMenu(): Promise<DailyMenu> {
+    const payload = await apiClient.post<unknown>('/api/menu/daily/publish');
+    return mapDailyMenu(unwrapDataObject<unknown>(payload));
   },
 
   async unpublishDailyMenu(): Promise<DailyMenu> {
     const payload = await apiClient.post<unknown>('/api/menu/daily/unpublish');
-    return toDailyMenu(payload);
+    return mapDailyMenu(unwrapDataObject<unknown>(payload));
   },
 
   async clearDailyMenu(): Promise<DailyMenu> {
     const payload = await apiClient.post<unknown>('/api/menu/daily/clear');
-    return toDailyMenu(payload);
+    return mapDailyMenu(unwrapDataObject<unknown>(payload));
   },
 };

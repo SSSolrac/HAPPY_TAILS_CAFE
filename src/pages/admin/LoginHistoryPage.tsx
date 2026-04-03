@@ -15,7 +15,7 @@ export const LoginHistoryPage = () => {
       </section>
       <section className="grid md:grid-cols-4 gap-2">
         <input className="border rounded px-2 py-1" placeholder="Search user" value={filters.query} onChange={(e) => setFilters({ ...filters, query: e.target.value, page: 1 })} />
-        <select className="border rounded px-2 py-1" value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value as typeof filters.role, page: 1 })}><option value="all">All roles</option><option value="owner">Owner</option><option value="staff">Staff</option><option value="customer">Customer</option></select>
+        <select className="border rounded px-2 py-1" value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value as typeof filters.role, page: 1 })}><option value="all">All roles</option><option value="owner">Admin</option><option value="staff">Staff</option><option value="customer">Customer</option></select>
         <input className="border rounded px-2 py-1" type="date" value={filters.date} onChange={(e) => setFilters({ ...filters, date: e.target.value, page: 1 })} />
         <select className="border rounded px-2 py-1" value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value as typeof filters.status, page: 1 })}><option value="all">All status</option><option value="success">Success</option><option value="failed">Failed</option></select>
       </section>

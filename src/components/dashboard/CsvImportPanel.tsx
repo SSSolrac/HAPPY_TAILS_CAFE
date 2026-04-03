@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { CsvImportType, SalesImportMergeResult } from '@/types/dashboard';
 
 const options: Array<{ value: CsvImportType; label: string }> = [
-  { value: 'sales', label: 'Sales (Owner)' },
+  { value: 'sales', label: 'Sales (Admin)' },
   { value: 'orders', label: 'Orders' },
   { value: 'customers', label: 'Customers' },
   { value: 'menu-items', label: 'Menu Items' },
@@ -20,7 +20,7 @@ const templates: Record<CsvImportType, string> = {
 
 export const CsvImportPanel = () => {
   const { user } = useAuth();
-  const isOwner = user?.role === 'owner';
+  const isAdmin = user?.role === 'admin';
   const [type, setType] = useState<CsvImportType>('sales');
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [validRows, setValidRows] = useState<Record<string, string>[]>([]);
@@ -30,8 +30,8 @@ export const CsvImportPanel = () => {
 
   const headers = useMemo(() => (rows[0] ? Object.keys(rows[0]) : []), [rows]);
 
-  if (!isOwner) {
-    return <section className="rounded-lg border bg-white p-4 text-sm text-[#6B7280]">Only owners can upload and import sales CSV data.</section>;
+  if (!isAdmin) {
+    return <section className="rounded-lg border bg-white p-4 text-sm text-[#6B7280]">Only admins can upload and import sales CSV data.</section>;
   }
 
   return (

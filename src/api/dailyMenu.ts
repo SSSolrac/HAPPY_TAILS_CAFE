@@ -1,20 +1,21 @@
 import { apiClient } from './client';
+import { unwrapDataObject } from './response';
 import type { DailyMenu } from '@/types/dailyMenu';
 
 export const dailyMenuApi = {
-  list(): Promise<DailyMenu[]> {
-    return apiClient.get<DailyMenu[]>('/api/menu/daily');
+  get(): Promise<DailyMenu> {
+    return apiClient.get<unknown>('/api/menu/daily').then((payload) => unwrapDataObject<DailyMenu>(payload));
   },
-
-  create(payload: Omit<DailyMenu, 'id' | 'createdAt' | 'updatedAt'>): Promise<DailyMenu> {
-    return apiClient.post<DailyMenu>('/api/menu/daily', payload);
+  update(payload: DailyMenu): Promise<DailyMenu> {
+    return apiClient.put<unknown>('/api/menu/daily', payload).then((result) => unwrapDataObject<DailyMenu>(result));
   },
-
-  update(dailyMenuId: string, payload: Partial<DailyMenu>): Promise<DailyMenu> {
-    return apiClient.patch<DailyMenu>(`/api/menu/daily/${dailyMenuId}`, payload);
+  publish(): Promise<DailyMenu> {
+    return apiClient.post<unknown>('/api/menu/daily/publish').then((result) => unwrapDataObject<DailyMenu>(result));
   },
-
-  publish(dailyMenuId: string): Promise<DailyMenu> {
-    return apiClient.patch<DailyMenu>(`/api/menu/daily/${dailyMenuId}/publish`);
+  unpublish(): Promise<DailyMenu> {
+    return apiClient.post<unknown>('/api/menu/daily/unpublish').then((result) => unwrapDataObject<DailyMenu>(result));
+  },
+  clear(): Promise<DailyMenu> {
+    return apiClient.post<unknown>('/api/menu/daily/clear').then((result) => unwrapDataObject<DailyMenu>(result));
   },
 };

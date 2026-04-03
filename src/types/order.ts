@@ -1,5 +1,4 @@
 import type { DateRangePreset } from './dashboard';
-import type { LoyaltyRewardName } from './loyalty';
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type PaymentMethod = 'qrph' | 'gcash' | 'maribank' | 'bdo';
@@ -64,7 +63,7 @@ export type Order = {
   loyaltyStampedAt?: string;
   loyaltyStampedBy?: 'automatic-order-confirmation' | 'manual-staff-adjustment';
   loyaltyMessage?: string;
-  loyaltyUnlockedRewards?: LoyaltyRewardName[];
+  loyaltyUnlockedRewards?: string[];
 };
 
 export type OrderFilters = {

@@ -10,7 +10,7 @@ export const useOrders = () => {
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<OrderStatus | 'all'>('all');
-  const [range, setRange] = useState<DateRangePreset>('1M');
+  const [range, setRange] = useState<DateRangePreset>('30d');
   const [knownOrderState, setKnownOrderState] = useState<Record<string, OrderStatus>>({});
 
   const loadOrders = useCallback(async () => {
