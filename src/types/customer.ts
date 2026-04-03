@@ -1,5 +1,3 @@
-export type CustomerTier = 'Gold' | 'Silver' | 'Bronze' | 'Unranked';
-
 export interface CustomerProfile {
   id: string;
   fullName: string;
@@ -23,8 +21,6 @@ export interface LoyaltyAccount {
 
 export interface CustomerWithLoyalty extends CustomerProfile {
   loyalty: LoyaltyAccount;
-  points: number;
-  tier: CustomerTier;
 }
 
 export type Customer = CustomerWithLoyalty;
