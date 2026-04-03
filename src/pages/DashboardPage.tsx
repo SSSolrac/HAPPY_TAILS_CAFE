@@ -24,7 +24,7 @@ export const DashboardPage = () => {
       { status: 'pending', total: data.orders.pending },
       { status: 'preparing', total: data.orders.preparing },
       { status: 'ready', total: data.orders.ready },
-      { status: 'out_for_delivery', total: data.orders.outForDelivery },
+      { status: 'outForDelivery', total: data.orders.outForDelivery },
       { status: 'completed', total: data.orders.completed },
       { status: 'cancelled', total: data.orders.cancelled },
     ];
@@ -69,7 +69,7 @@ export const DashboardPage = () => {
           <div className="space-y-4">
             <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {statusCards.map((status) => (
-                <KPICard key={status.status} title={`${status.status.replaceAll('_', ' ')} Orders`} value={String(status.total)} subtitle={`Within ${selectedRange}`} />
+                <KPICard key={status.status} title={`${status.status.replace(/([A-Z])/g, ' $1').toLowerCase()} Orders`} value={String(status.total)} subtitle={`Within ${selectedRange}`} />
               ))}
             </section>
             <section className="grid lg:grid-cols-2 gap-4">

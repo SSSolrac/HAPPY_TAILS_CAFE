@@ -1,12 +1,20 @@
 import { apiClient } from './client';
 import { asRecord, unwrapDataObject } from './response';
-import type { DashboardSummary, DateRangePreset } from '@/types/dashboard';
+import type { DashboardData, DateRangePreset } from '@/types/dashboard';
 
-const mapDashboard = (raw: unknown): DashboardSummary => {
+const mapTopItem = (raw: unknown): DashboardData['topItems'][number] => {
+  const row = asRecord(raw) ?? {};
+  return {
+    itemName: String(row.itemName ?? ''),
+    quantity: Number(row.quantity ?? 0),
+    revenue: Number(row.revenue ?? 0),
+  };
+};
+
+const mapDashboard = (raw: unknown): DashboardData => {
   const row = asRecord(raw) ?? {};
   const sales = asRecord(row.sales) ?? {};
   const orders = asRecord(row.orders) ?? {};
-  const byStatus = asRecord(orders.byStatus) ?? {};
 
   return {
     sales: {
@@ -15,44 +23,23 @@ const mapDashboard = (raw: unknown): DashboardSummary => {
       averageOrderValue: Number(sales.averageOrderValue ?? 0),
     },
     orders: {
-      total: Number(orders.total ?? 0),
-      byStatus: {
-        pending: Number(byStatus.pending ?? 0),
-        preparing: Number(byStatus.preparing ?? 0),
-        ready: Number(byStatus.ready ?? 0),
-        out_for_delivery: Number(byStatus.out_for_delivery ?? 0),
-        completed: Number(byStatus.completed ?? 0),
-        delivered: Number(byStatus.delivered ?? 0),
-        cancelled: Number(byStatus.cancelled ?? 0),
-        refunded: Number(byStatus.refunded ?? 0),
-      },
+      today: Number(orders.today ?? 0),
+      rangeTotal: Number(orders.rangeTotal ?? 0),
+      pending: Number(orders.pending ?? 0),
+      preparing: Number(orders.preparing ?? 0),
+      ready: Number(orders.ready ?? 0),
+      outForDelivery: Number(orders.outForDelivery ?? 0),
+      completed: Number(orders.completed ?? 0),
+      cancelled: Number(orders.cancelled ?? 0),
     },
-    topItems: Array.isArray(row.topItems) ? (row.topItems as DashboardSummary['topItems']) : [],
-    recentOrders: Array.isArray(row.recentOrders) ? (row.recentOrders as DashboardSummary['recentOrders']) : [],
-    alerts: Array.isArray(row.alerts) ? (row.alerts as DashboardSummary['alerts']) : [],
-    salesSummary: {
-      todaySales: Number(sales.today ?? 0),
-      weeklySales: Number(sales.rangeTotal ?? 0),
-      monthlySales: Number(sales.rangeTotal ?? 0),
-      averageOrderValue: Number(sales.averageOrderValue ?? 0),
-    },
-    orderStatusSummary: {
-      pending: Number(byStatus.pending ?? 0),
-      preparing: Number(byStatus.preparing ?? 0),
-      ready: Number(byStatus.ready ?? 0),
-      out_for_delivery: Number(byStatus.out_for_delivery ?? 0),
-      completed: Number(byStatus.completed ?? 0),
-      delivered: Number(byStatus.delivered ?? 0),
-      cancelled: Number(byStatus.cancelled ?? 0),
-      refunded: Number(byStatus.refunded ?? 0),
-    },
-    topSellingItems: Array.isArray(row.topItems) ? (row.topItems as DashboardSummary['topItems']) : [],
-    customerSummary: { totalCustomers: 0, activeLoyaltyCustomers: 0 },
+    topItems: Array.isArray(row.topItems) ? row.topItems.map(mapTopItem) : [],
+    recentOrders: Array.isArray(row.recentOrders) ? (row.recentOrders as DashboardData['recentOrders']) : [],
+    alerts: Array.isArray(row.alerts) ? (row.alerts as DashboardData['alerts']) : [],
   };
 };
 
 export const dashboardApi = {
-  async getDashboardData(range: DateRangePreset): Promise<DashboardSummary> {
+  async getDashboardData(range: DateRangePreset): Promise<DashboardData> {
     const payload = await apiClient.get<unknown>('/api/dashboard', { range });
     return mapDashboard(unwrapDataObject<unknown>(payload));
   },

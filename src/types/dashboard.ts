@@ -2,40 +2,21 @@ import type { Order } from './order';
 
 export type DateRangePreset = 'today' | '7d' | '30d' | '90d';
 
-export type DashboardSummary = {
+export type Alert = {
+  id: string;
+  message: string;
+  type: 'info' | 'warning' | 'error';
+};
+
+export type DashboardData = {
   sales: {
     today: number;
     rangeTotal: number;
     averageOrderValue: number;
   };
   orders: {
-    total: number;
-    byStatus: {
-      pending: number;
-      preparing: number;
-      ready: number;
-      out_for_delivery: number;
-      completed: number;
-      delivered: number;
-      cancelled: number;
-      refunded: number;
-    };
-  };
-  topItems: Array<{
-    itemName: string;
-    qtySold: number;
-    revenue: number;
-  }>;
-  recentOrders: Order[];
-  alerts: Array<{ id: string; message: string; type: 'info' | 'warning' | 'error' }>;
-
-  salesSummary?: {
-    todaySales: number;
-    weeklySales: number;
-    monthlySales: number;
-    averageOrderValue: number;
-  };
-  orderStatusSummary?: {
+    today: number;
+    rangeTotal: number;
     pending: number;
     preparing: number;
     ready: number;
@@ -43,15 +24,13 @@ export type DashboardSummary = {
     completed: number;
     cancelled: number;
   };
-  topSellingItems?: Array<{
+  topItems: Array<{
     itemName: string;
     quantity: number;
     revenue: number;
   }>;
-  customerSummary?: {
-    totalCustomers: number;
-    activeLoyaltyCustomers: number;
-  };
+  recentOrders: Order[];
+  alerts: Alert[];
 };
 
 export type TrendPoint = {

@@ -1,21 +1,9 @@
 import { apiClient } from './client';
-import { unwrapDataObject } from './response';
+import { asRecord, unwrapDataObject } from './response';
 import type { CustomerProfile } from '@/types/customer';
 
-const emptyProfile = (): Profile => ({
-  id: '',
-  name: '',
-  email: '',
-  phone: '',
-  addresses: [],
-  preferences: {},
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-});
-
-const mapProfile = (raw: unknown): Profile => {
-  const row = asRecord(raw);
-  if (!row) return emptyProfile();
+const mapProfile = (raw: unknown): CustomerProfile => {
+  const row = asRecord(raw) ?? {};
   return {
     id: String(row.id ?? ''),
     name: String(row.name ?? ''),
@@ -31,10 +19,11 @@ const mapProfile = (raw: unknown): Profile => {
 export const profileApi = {
   async getMe(): Promise<CustomerProfile> {
     const payload = await apiClient.get<unknown>('/api/profile/me');
-    return unwrapDataObject<CustomerProfile>(payload);
+    return mapProfile(unwrapDataObject<unknown>(payload));
   },
+
   async updateMe(payload: Partial<CustomerProfile>): Promise<CustomerProfile> {
     const result = await apiClient.put<unknown>('/api/profile/me', payload);
-    return unwrapDataObject<CustomerProfile>(result);
+    return mapProfile(unwrapDataObject<unknown>(result));
   },
 };

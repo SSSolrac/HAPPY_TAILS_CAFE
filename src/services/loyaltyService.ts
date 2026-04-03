@@ -1,5 +1,5 @@
 import { loyaltyApi } from '@/api/loyalty';
-import type { LoyaltyAccount } from '@/types/customer';
+import type { LoyaltyAccount } from '@/types/loyalty';
 import type { Order } from '@/types/order';
 
 export const loyaltyService = {

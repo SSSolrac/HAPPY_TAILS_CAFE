@@ -1,26 +1,13 @@
+import type { LoyaltyAccount } from './loyalty';
+
 export interface CustomerProfile {
   id: string;
-  fullName: string;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  city?: string | null;
-  notes?: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  addresses: string[];
+  preferences: Record<string, unknown>;
   createdAt: string;
-  updatedAt: string;
-}
-
-export interface Reward {
-  id: string;
-  label: string;
-  requiredStamps: number;
-}
-
-export interface LoyaltyAccount {
-  customerId: string;
-  stampCount: number;
-  availableRewards: string[];
-  redeemedRewards: string[];
   updatedAt: string;
 }
 

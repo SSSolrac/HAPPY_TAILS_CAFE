@@ -6,12 +6,11 @@ const mapCustomer = (raw: unknown): CustomerProfile => {
   const row = asRecord(raw) ?? {};
   return {
     id: String(row.id ?? ''),
-    fullName: String(row.fullName ?? 'Unknown Customer'),
-    email: row.email ? String(row.email) : undefined,
-    phone: row.phone ? String(row.phone) : undefined,
-    address: row.address ? String(row.address) : undefined,
-    city: row.city ? String(row.city) : undefined,
-    notes: row.notes ? String(row.notes) : undefined,
+    name: String(row.name ?? ''),
+    email: String(row.email ?? ''),
+    phone: String(row.phone ?? ''),
+    addresses: Array.isArray(row.addresses) ? row.addresses.map(String) : [],
+    preferences: (asRecord(row.preferences) ?? {}) as Record<string, unknown>,
     createdAt: String(row.createdAt ?? new Date().toISOString()),
     updatedAt: String(row.updatedAt ?? row.createdAt ?? new Date().toISOString()),
   };

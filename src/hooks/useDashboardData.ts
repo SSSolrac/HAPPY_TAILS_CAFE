@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { dashboardService } from '@/services/dashboardService';
-import type { DashboardSummary, DateRangePreset } from '@/types/dashboard';
+import type { DashboardData, DateRangePreset } from '@/types/dashboard';
 
 export const useDashboardData = () => {
   const [selectedRange, setSelectedRange] = useState<DateRangePreset>('today');
-  const [data, setData] = useState<DashboardSummary | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
