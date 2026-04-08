@@ -16,7 +16,7 @@ const rewardReadiness = (customer: Customer): RewardFilter => {
 const rewardLabels = (labels: Customer['loyalty']['availableRewards']) => labels.map((reward) => reward.label).join(', ');
 
 export const CustomersLoyaltyPage = () => {
-  const { customers, loading } = useCustomers();
+  const { customers, loading, error } = useCustomers();
   const [query, setQuery] = useState('');
   const [rewardFilter, setRewardFilter] = useState<RewardFilter>('All');
   const [selected, setSelected] = useState<Customer | null>(null);
@@ -36,11 +36,12 @@ export const CustomersLoyaltyPage = () => {
   }), [customers]);
 
   if (loading) return <p>Loading customers...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <div className="space-y-4">
       <section className="rounded-lg border bg-white dark:bg-slate-800 p-4 space-y-3">
-        <h2 className="text-lg font-semibold">Customers & Loyalty</h2>
+        <h2 className="text-lg font-semibold">Customer Loyalty</h2>
         <p className="text-sm text-[#6B7280]">Stamp-only loyalty account with available and redeemed rewards.</p>
         <div className="flex flex-wrap gap-2">
           <input className="border rounded px-2 py-1 w-full md:w-80" placeholder="Search customer code, name or email" value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -63,7 +64,7 @@ export const CustomersLoyaltyPage = () => {
             {filtered.map((customer) => <tr key={customer.id} className="border-t"><td>{customer.customerCode ?? '-'}</td><td>{customer.name}</td><td>{customer.email}</td><td>{customer.loyalty.stampCount}/{LOYALTY_TOTAL_STAMPS}</td><td>{rewardLabels(customer.loyalty.availableRewards) || 'None'}</td><td>{rewardLabels(customer.loyalty.redeemedRewards) || 'None'}</td><td>{rewardReadiness(customer)}</td><td><button className="border rounded px-2 py-1" onClick={() => setSelected(customer)}>Details</button></td></tr>)}
           </tbody></table>
         </div>
-        <aside className="rounded-lg border bg-white dark:bg-slate-800 p-4 space-y-3"><h3 className="font-medium">Customer activity snapshot</h3></aside>
+        <aside className="rounded-lg border bg-white dark:bg-slate-800 p-4 space-y-3"><h3 className="font-medium">Customer Loyalty Snapshot</h3></aside>
       </section>
 
       {selected && <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-20"><div className="w-full max-w-xl rounded-lg border bg-white dark:bg-slate-800 p-4 space-y-3"><div className="flex items-center justify-between"><h3 className="font-semibold">{selected.name}</h3><button className="border rounded px-2 py-1" onClick={() => setSelected(null)}>Close</button></div><p>Customer code: {selected.customerCode ?? '-'}</p><p>Stamp count: {selected.loyalty.stampCount}</p><p>Available rewards: {rewardLabels(selected.loyalty.availableRewards) || 'None'}</p></div></div>}

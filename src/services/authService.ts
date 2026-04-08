@@ -1,20 +1,8 @@
-import { supabase } from '@/lib/supabase';
-import { asRecord, mapUserRole } from '@/lib/mappers';
+import { normalizeError, AppError } from '@/lib/errors';
+import { mapUserRole } from '@/lib/mappers';
+import { requireSupabaseClient } from '@/lib/supabase';
+import { loginHistoryService } from '@/services/loginHistoryService';
 import type { SessionUser } from '@/types/user';
-
-const asAuthError = (error: unknown, fallback = 'Authentication failed.') => {
-  const message = asRecord(error)?.message;
-  if (typeof message === 'string' && message.trim()) return new Error(message);
-  if (error instanceof Error && error.message.trim()) return new Error(error.message);
-  return new Error(fallback);
-};
-
-const asDbError = (error: unknown, fallback = 'Database request failed.') => {
-  const message = asRecord(error)?.message;
-  if (typeof message === 'string' && message.trim()) return new Error(message);
-  if (error instanceof Error && error.message.trim()) return new Error(error.message);
-  return new Error(fallback);
-};
 
 const buildSessionUser = (params: { userId: string; email: string; name: string; role: SessionUser['role'] }): SessionUser => ({
   id: params.userId,
@@ -24,20 +12,27 @@ const buildSessionUser = (params: { userId: string; email: string; name: string;
 });
 
 const fetchProfileForUserId = async (userId: string) => {
+  const supabase = requireSupabaseClient();
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
-  if (error) throw asDbError(error, 'Unable to load your profile.');
-  if (!data) throw new Error('Profile row missing for this user.');
+  if (error) throw normalizeError(error, { fallbackMessage: 'Unable to load your profile.' });
+  if (!data) {
+    throw new AppError({
+      category: 'schema',
+      message: 'Profile row missing for this user. Ensure the profiles table is populated for authenticated users.',
+    });
+  }
   return data;
 };
 
 export const authService = {
   async login(email: string, password: string): Promise<SessionUser> {
+    const supabase = requireSupabaseClient();
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
 
-    if (error) throw asAuthError(error, 'Invalid email or password.');
+    if (error) throw normalizeError(error, { fallbackMessage: 'Invalid email or password.' });
     const user = data.user;
     if (!user) throw new Error('Unable to sign in.');
 
@@ -51,6 +46,15 @@ export const authService = {
       throw new Error('This account is not allowed to access Staffowner.');
     }
 
+    // Best-effort login audit log (canonical schema: public.login_history).
+    try {
+      await loginHistoryService.recordLogin({
+        userId: user.id,
+        email: String(profile.email ?? user.email ?? ''),
+        role,
+      });
+    } catch {}
+
     return buildSessionUser({
       userId: user.id,
       email: String(profile.email ?? user.email ?? ''),
@@ -60,20 +64,28 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
+    const supabase = requireSupabaseClient();
     const { error } = await supabase.auth.signOut();
-    if (error) throw asAuthError(error, 'Unable to sign out.');
+    if (error) throw normalizeError(error, { fallbackMessage: 'Unable to sign out.' });
   },
 
   async getCurrentUser(): Promise<SessionUser | null> {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw asAuthError(error, 'Unable to restore session.');
-    const session = data.session;
-    if (!session?.user) return null;
+    const supabase = requireSupabaseClient();
+    // Important: use getUser() (server-validated) rather than getSession() (local cache),
+    // so stale local sessions don't survive backend/session validation failures.
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw normalizeError(error, { fallbackMessage: 'Unable to restore session.' });
+    const user = data.user;
+    if (!user) return null;
 
-    const user = session.user;
     const profile = await fetchProfileForUserId(user.id);
     const role = mapUserRole(profile.role);
-    if (role !== 'owner' && role !== 'staff') return null;
+    if (role !== 'owner' && role !== 'staff') {
+      try {
+        await supabase.auth.signOut();
+      } catch {}
+      return null;
+    }
 
     return buildSessionUser({
       userId: user.id,

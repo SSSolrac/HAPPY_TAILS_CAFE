@@ -4,7 +4,7 @@ import { csvImportService } from '@/services/csvImportService';
 import { useAuth } from '@/hooks/useAuth';
 import type { SalesImportMergeResult } from '@/types/dashboard';
 
-const template = 'date,sales_total,payment_method,status,customer_code,item_code\n2026-04-01,12340,gcash,completed,HTC-00001,MI-00001';
+const template = 'date,sales_total,payment_method,status,customer_code,item_code\n2026-04-01,12340,gcash,completed,HTC-000001,MI-00001';
 
 export const CsvImportPanel = () => {
   const { user } = useAuth();

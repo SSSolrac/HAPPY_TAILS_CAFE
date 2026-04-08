@@ -30,12 +30,12 @@ export const DashboardLayout = () => {
 
   const navItems = useMemo(() => {
     const base = [
-      { label: 'Sales summary', path: '/dashboard', icon: LayoutDashboard },
-      { label: 'Orders', path: '/orders', icon: ClipboardList },
-      { label: 'Daily Menu', path: '/daily-menu', icon: Utensils },
-      { label: 'Menu', path: '/menu', icon: Utensils },
-      { label: 'Customers / Loyalty', path: '/customers', icon: Users },
-      { label: 'Imports / Reports', path: '/imports', icon: Upload, ownerOnly: true },
+      { label: 'Dashboard Overview', path: '/dashboard', icon: LayoutDashboard },
+      { label: 'View Orders', path: '/orders', icon: ClipboardList },
+      { label: 'Edit Daily Menu', path: '/daily-menu', icon: Utensils },
+      { label: 'Manage Menu Items', path: '/menu', icon: Utensils },
+      { label: 'Customer Loyalty', path: '/customers', icon: Users },
+      { label: 'Import Sales Data', path: '/imports', icon: Upload, ownerOnly: true },
       { label: 'Settings', path: '/settings', icon: Settings },
       { label: 'Profile', path: '/profile', icon: User },
       { label: 'Owner Logs', path: '/admin/activity-log', icon: ScrollText, ownerOnly: true },
@@ -53,8 +53,12 @@ export const DashboardLayout = () => {
   }, [location.pathname, navItems]);
 
   const onSignOut = async () => {
-    localStorage.clear();
-    sessionStorage.clear();
+    try {
+      localStorage.clear();
+    } catch {}
+    try {
+      sessionStorage.clear();
+    } catch {}
     await logout();
     toast.success('Signed out successfully');
     navigate('/login', { replace: true });

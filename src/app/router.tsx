@@ -14,7 +14,8 @@ import { ImportsReportsPage } from '@/pages/imports/ImportsReportsPage';
 import { useAuth } from '@/hooks/useAuth';
 
 const ProtectedRoute = ({ ownerOnly = false, children }: { ownerOnly?: boolean; children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, bootstrapping } = useAuth();
+  if (!user && bootstrapping) return <p>Loading session...</p>;
   if (!user) return <Navigate to="/login" replace />;
   if (ownerOnly && user.role !== 'owner') return <Navigate to="/dashboard" replace />;
   return <>{children}</>;

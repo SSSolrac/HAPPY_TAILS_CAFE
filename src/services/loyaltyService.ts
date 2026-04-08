@@ -1,28 +1,24 @@
-import { supabase } from '@/lib/supabase';
-import { asRecord, mapLoyaltyAccountRow, mapRewardRow } from '@/lib/mappers';
+import { normalizeError } from '@/lib/errors';
+import { mapLoyaltyAccountRow, mapRewardRow } from '@/lib/mappers';
+import { requireSupabaseClient } from '@/lib/supabase';
 import type { LoyaltyAccount } from '@/types/loyalty';
 import type { Reward } from '@/types/loyalty';
 
-const asDbError = (error: unknown, fallback = 'Database request failed.') => {
-  const message = asRecord(error)?.message;
-  if (typeof message === 'string' && message.trim()) return new Error(message);
-  if (error instanceof Error && error.message.trim()) return new Error(error.message);
-  return new Error(fallback);
-};
-
 const listActiveRewards = async (): Promise<Reward[]> => {
+  const supabase = requireSupabaseClient();
   const { data, error } = await supabase
     .from('loyalty_rewards')
     .select('*')
     .eq('is_active', true)
     .order('required_stamps', { ascending: true });
 
-  if (error) throw asDbError(error, 'Unable to load loyalty rewards.');
+  if (error) throw normalizeError(error, { fallbackMessage: 'Unable to load loyalty rewards.' });
   return (Array.isArray(data) ? data : []).map(mapRewardRow);
 };
 
 export const loyaltyService = {
   async getCustomerLoyalty(customerId: string): Promise<LoyaltyAccount> {
+    const supabase = requireSupabaseClient();
     const now = new Date().toISOString();
     const [rewards, accountResult, redemptionsResult] = await Promise.all([
       listActiveRewards(),
@@ -30,8 +26,8 @@ export const loyaltyService = {
       supabase.from('loyalty_redemptions').select('*').eq('customer_id', customerId).order('redeemed_at', { ascending: false }),
     ]);
 
-    if (accountResult.error) throw asDbError(accountResult.error, 'Unable to load loyalty account.');
-    if (redemptionsResult.error) throw asDbError(redemptionsResult.error, 'Unable to load loyalty redemptions.');
+    if (accountResult.error) throw normalizeError(accountResult.error, { fallbackMessage: 'Unable to load loyalty account.' });
+    if (redemptionsResult.error) throw normalizeError(redemptionsResult.error, { fallbackMessage: 'Unable to load loyalty redemptions.' });
 
     const stampCount = mapLoyaltyAccountRow(accountResult.data).stampCount ?? 0;
     const availableRewards = rewards.filter((reward) => reward.requiredStamps <= stampCount);
@@ -54,6 +50,7 @@ export const loyaltyService = {
   },
 
   async getCustomersLoyalty(customerIds: string[]): Promise<Record<string, LoyaltyAccount>> {
+    const supabase = requireSupabaseClient();
     const now = new Date().toISOString();
     const ids = Array.from(new Set(customerIds)).filter(Boolean);
     if (!ids.length) return {};
@@ -64,8 +61,8 @@ export const loyaltyService = {
       supabase.from('loyalty_redemptions').select('*').in('customer_id', ids),
     ]);
 
-    if (accountsResult.error) throw asDbError(accountsResult.error, 'Unable to load loyalty accounts.');
-    if (redemptionsResult.error) throw asDbError(redemptionsResult.error, 'Unable to load loyalty redemptions.');
+    if (accountsResult.error) throw normalizeError(accountsResult.error, { fallbackMessage: 'Unable to load loyalty accounts.' });
+    if (redemptionsResult.error) throw normalizeError(redemptionsResult.error, { fallbackMessage: 'Unable to load loyalty redemptions.' });
 
     const accountByCustomerId = new Map(
       (Array.isArray(accountsResult.data) ? accountsResult.data : []).map((row) => {

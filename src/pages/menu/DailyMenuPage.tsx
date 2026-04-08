@@ -60,7 +60,7 @@ export const DailyMenuPage = () => {
       <section className="rounded-lg border bg-white dark:bg-slate-800 p-4 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Daily Menu Management</h2>
+            <h2 className="text-lg font-semibold">Edit Daily Menu</h2>
             <p className="text-sm text-[#6B7280] dark:text-slate-300">Build and publish daily menus from canonical daily menu tables.</p>
           </div>
           <span
@@ -84,7 +84,7 @@ export const DailyMenuPage = () => {
 
         <div className="space-y-3">
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <h3 className="font-medium">Daily Menu Items</h3>
+            <h3 className="font-medium">Edit Daily Menu Items</h3>
             <div className="flex gap-2 items-end">
               <select className="border rounded px-2 py-1 text-sm" value={menuItemToAdd} onChange={(e) => setMenuItemToAdd(e.target.value)}>
                 <option value="">Select menu item</option>
@@ -95,7 +95,7 @@ export const DailyMenuPage = () => {
                 ))}
               </select>
               <button className="border rounded px-2 py-1" onClick={addItem} disabled={!menuItemToAdd}>
-                Add item
+                Add Menu Item
               </button>
             </div>
           </div>
@@ -130,7 +130,7 @@ export const DailyMenuPage = () => {
               toast.success('Daily menu draft saved.');
             }}
           >
-            Save Draft
+            Save Daily Menu Draft
           </button>
           <button
             className="border rounded px-3 py-1"
@@ -141,7 +141,7 @@ export const DailyMenuPage = () => {
               toast.success('Daily menu published.');
             }}
           >
-            Publish Menu
+            Publish Daily Menu
           </button>
           <button
             className="border rounded px-3 py-1"
@@ -152,7 +152,7 @@ export const DailyMenuPage = () => {
               toast.info('Daily menu unpublished.');
             }}
           >
-            Unpublish
+            Unpublish Daily Menu
           </button>
           <button
             className="border rounded px-3 py-1"
@@ -163,7 +163,7 @@ export const DailyMenuPage = () => {
               toast.info('Daily menu cleared.');
             }}
           >
-            Clear Menu
+            Clear Daily Menu
           </button>
         </div>
       </section>
@@ -187,4 +187,3 @@ export const DailyMenuPage = () => {
     </div>
   );
 };
-

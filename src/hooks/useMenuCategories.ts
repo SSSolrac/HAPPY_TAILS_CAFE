@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { menuService } from '@/services/menuService';
+import { getErrorMessage } from '@/lib/errors';
 import type { MenuCategory } from '@/types/menuItem';
 
 export const useMenuCategories = () => {
@@ -14,7 +15,7 @@ export const useMenuCategories = () => {
       setCategories(await menuService.getMenuCategories());
     } catch (loadError) {
       console.error('Failed to load menu categories', loadError);
-      setError('Unable to load menu categories.');
+      setError(getErrorMessage(loadError, 'Unable to load menu categories.'));
     } finally {
       setLoading(false);
     }
@@ -40,4 +41,3 @@ export const useMenuCategories = () => {
 
   return { categories, loading, error, saveCategory, deleteCategory, refresh: load };
 };
-

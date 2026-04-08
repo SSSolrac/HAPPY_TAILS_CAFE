@@ -2,8 +2,23 @@ import type { StaffOwnerNotification, StaffOwnerNotificationType } from '@/types
 
 const STORAGE_KEY = 'staffowner_notifications';
 
+const getStorage = (): Storage | null => {
+  try {
+    return localStorage;
+  } catch {
+    return null;
+  }
+};
+
 const load = (): StaffOwnerNotification[] => {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const storage = getStorage();
+  if (!storage) return [];
+  let raw: string | null = null;
+  try {
+    raw = storage.getItem(STORAGE_KEY);
+  } catch {
+    return [];
+  }
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as StaffOwnerNotification[];
@@ -14,7 +29,11 @@ const load = (): StaffOwnerNotification[] => {
 };
 
 const save = (rows: StaffOwnerNotification[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  const storage = getStorage();
+  if (!storage) return;
+  try {
+    storage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  } catch {}
 };
 
 const dedupeWindowMs = 30 * 1000;

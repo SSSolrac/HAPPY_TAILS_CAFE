@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "test": "node --experimental-strip-types --loader ./test/alias-loader.mjs test/run-tests.ts"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

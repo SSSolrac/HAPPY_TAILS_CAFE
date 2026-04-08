@@ -79,8 +79,8 @@ export const DashboardPage = () => {
       <div className="rounded-lg border bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold">Sales summary</p>
-            <p className="text-xs text-slate-500">A Loyverse-style overview using your Supabase dashboard summary.</p>
+            <p className="text-sm font-semibold">Dashboard Overview</p>
+            <p className="text-xs text-slate-500">A quick performance overview using your Supabase dashboard summary.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <DateRangeFilter value={selectedRange} onChange={setSelectedRange} variant="select" />

@@ -56,7 +56,7 @@ export const OrdersPage = () => {
       <section className="rounded-lg border bg-white dark:bg-slate-800 p-4 space-y-3">
         <div className="flex flex-wrap items-end gap-3 justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Orders Operations</h2>
+            <h2 className="text-lg font-semibold">View Orders</h2>
             <p className="text-sm text-[#6B7280]">Track order progress, confirm payments, and update status in the shared backend.</p>
           </div>
           <DateRangeFilter value={range} onChange={setRange} />
@@ -152,7 +152,7 @@ export const OrdersPage = () => {
                           setSelectedOrder(full);
                         }}
                       >
-                        Details
+                        View Order Details
                       </button>
                       <button
                         className="border rounded px-2 py-1 disabled:opacity-50"
@@ -270,4 +270,3 @@ export const OrdersPage = () => {
     </div>
   );
 };
-

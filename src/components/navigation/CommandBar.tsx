@@ -8,12 +8,12 @@ export const CommandBar = () => {
   const isOwner = user?.role === 'owner';
 
   const links = useMemo(() => [
-    { label: 'Dashboard', path: '/dashboard' },
-    { label: 'Orders', path: '/orders' },
-    { label: 'Daily Menu', path: '/daily-menu' },
-    { label: 'Menu', path: '/menu' },
-    { label: 'Customers / Loyalty', path: '/customers' },
-    ...(isOwner ? [{ label: 'Imports / Reports', path: '/imports' }] : []),
+    { label: 'Dashboard Overview', path: '/dashboard' },
+    { label: 'View Orders', path: '/orders' },
+    { label: 'Edit Daily Menu', path: '/daily-menu' },
+    { label: 'Manage Menu Items', path: '/menu' },
+    { label: 'Customer Loyalty', path: '/customers' },
+    ...(isOwner ? [{ label: 'Import Sales Data', path: '/imports' }] : []),
     { label: 'Settings', path: '/settings' },
     { label: 'Profile', path: '/profile' },
     ...(isOwner ? [{ label: 'Owner Logs', path: '/admin/activity-log' }, { label: 'Login History', path: '/admin/login-history' }] : []),

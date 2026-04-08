@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { dashboardService } from '@/services/dashboardService';
+import { getErrorMessage } from '@/lib/errors';
 import type { DashboardData, DateRangePreset } from '@/types/dashboard';
 
 export const useDashboardData = () => {
@@ -16,7 +17,7 @@ export const useDashboardData = () => {
         setData(await dashboardService.getDashboardData(selectedRange));
       } catch (loadError) {
         console.error('Failed to load dashboard data', loadError);
-        setError('Unable to load dashboard data.');
+        setError(getErrorMessage(loadError, 'Unable to load dashboard data.'));
       } finally {
         setLoading(false);
       }

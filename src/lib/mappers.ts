@@ -63,6 +63,12 @@ export const mapMenuCategoryRow = (row: unknown): MenuCategory => {
 export const mapMenuItemRow = (row: unknown): MenuItem => {
   const r = asRecord(row) ?? {};
   const now = new Date().toISOString();
+  const effectiveAvailability =
+    r.effective_is_available ??
+    r.effectiveIsAvailable ??
+    r.is_effectively_available ??
+    r.isEffectivelyAvailable ??
+    r.is_available;
   return {
     id: asString(r.id, ''),
     code: asString(r.code, ''),
@@ -71,7 +77,7 @@ export const mapMenuItemRow = (row: unknown): MenuItem => {
     description: r.description == null ? null : asString(r.description, ''),
     price: asNumber(r.price, 0),
     discount: asNumber(r.discount, 0),
-    isAvailable: asBoolean(r.is_available, true),
+    isAvailable: asBoolean(effectiveAvailability, true),
     imageUrl: r.image_url == null ? null : asString(r.image_url, ''),
     createdAt: asIsoString(r.created_at, now),
     updatedAt: asIsoString(r.updated_at, asIsoString(r.created_at, now)),

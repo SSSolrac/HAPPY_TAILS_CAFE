@@ -1,13 +1,7 @@
-import { supabase } from '@/lib/supabase';
+import { normalizeError } from '@/lib/errors';
 import { asRecord, mapOrderRow } from '@/lib/mappers';
+import { requireSupabaseClient } from '@/lib/supabase';
 import type { DashboardData, DateRangePreset } from '@/types/dashboard';
-
-const asDbError = (error: unknown, fallback = 'Database request failed.') => {
-  const message = asRecord(error)?.message;
-  if (typeof message === 'string' && message.trim()) return new Error(message);
-  if (error instanceof Error && error.message.trim()) return new Error(error.message);
-  return new Error(fallback);
-};
 
 const mapDashboardSummary = (payload: unknown): DashboardData => {
   const base = (Array.isArray(payload) ? payload[0] : payload) as unknown;
@@ -92,8 +86,9 @@ const mapDashboardSummary = (payload: unknown): DashboardData => {
 
 export const dashboardService = {
   async getDashboardData(range: DateRangePreset): Promise<DashboardData> {
+    const supabase = requireSupabaseClient();
     const { data, error } = await supabase.rpc('dashboard_summary', { range_key: range });
-    if (error) throw asDbError(error, 'Unable to load dashboard summary.');
+    if (error) throw normalizeError(error, { fallbackMessage: 'Unable to load dashboard summary.' });
     return mapDashboardSummary(data);
   },
 };

@@ -1,6 +1,7 @@
 import type { CsvImportType, CsvValidationResult, SalesImportMergeResult, SalesImportPreview } from '@/types/dashboard';
-import { supabase } from '@/lib/supabase';
+import { normalizeError } from '@/lib/errors';
 import { asRecord } from '@/lib/mappers';
+import { requireSupabaseClient } from '@/lib/supabase';
 
 const splitCsvLine = (line: string): string[] => {
   const values: string[] = [];
@@ -60,15 +61,11 @@ export const csvImportService = {
   },
 
   async importSales(rows: Record<string, string>[]): Promise<SalesImportMergeResult> {
+    const supabase = requireSupabaseClient();
     const now = new Date().toISOString();
     const { validRows, invalidRows } = this.validateImportedRows('sales', rows);
 
-    const asDbError = (error: unknown, fallback = 'Import failed.') => {
-      const message = asRecord(error)?.message;
-      if (typeof message === 'string' && message.trim()) return new Error(message);
-      if (error instanceof Error && error.message.trim()) return new Error(error.message);
-      return new Error(fallback);
-    };
+    const asImportError = (error: unknown, fallback = 'Import failed.') => normalizeError(error, { fallbackMessage: fallback });
 
     const findMissingColumn = (error: unknown, relation: string) => {
       const message = String(asRecord(error)?.message ?? (error instanceof Error ? error.message : ''));
@@ -96,7 +93,7 @@ export const csvImportService = {
     };
 
     const user = await supabase.auth.getUser();
-    if (user.error) throw asDbError(user.error, 'Unable to load session.');
+    if (user.error) throw asImportError(user.error, 'Unable to load session.');
 
     const batchPayload: Record<string, unknown> = {
       type: 'sales',
@@ -111,7 +108,7 @@ export const csvImportService = {
     try {
       batchRow = (await insertWithFallback('sales_import_batches', batchPayload)) as Record<string, unknown>;
     } catch (error) {
-      throw asDbError(error, 'Unable to create import batch.');
+      throw asImportError(error, 'Unable to create import batch.');
     }
 
     const batchId = String(batchRow.id ?? '');
@@ -126,7 +123,7 @@ export const csvImportService = {
       }));
 
       const { error } = await supabase.from('import_errors').insert(errorRows);
-      if (error) throw asDbError(error, 'Unable to write import errors.');
+      if (error) throw asImportError(error, 'Unable to write import errors.');
     }
 
     if (validRows.length) {
@@ -142,7 +139,7 @@ export const csvImportService = {
       }));
 
       const { error } = await supabase.from('imported_sales_rows').insert(salesRows);
-      if (error) throw asDbError(error, 'Unable to write imported sales rows.');
+      if (error) throw asImportError(error, 'Unable to write imported sales rows.');
     }
 
     return {
@@ -159,17 +156,27 @@ export const csvImportService = {
   },
 
   async listHistory(): Promise<Array<{ id: string; type: string; totalRows: number; validRows: number; invalidRows: number; importedAt: string }>> {
-    const now = new Date().toISOString();
-    const { data, error } = await supabase.from('sales_import_batches').select('*').order('created_at', { ascending: false });
-    if (error) return [];
+    try {
+      const supabase = requireSupabaseClient();
+      const now = new Date().toISOString();
+      const { data, error } = await supabase.from('sales_import_batches').select('*').order('created_at', { ascending: false });
+      if (error) return [];
 
-    return (Array.isArray(data) ? data : []).map((row) => ({
-      id: String((row as { id?: unknown }).id ?? ''),
-      type: String((row as { type?: unknown }).type ?? 'sales'),
-      totalRows: Number((row as { total_rows?: unknown; totalRows?: unknown }).total_rows ?? (row as { totalRows?: unknown }).totalRows ?? 0),
-      validRows: Number((row as { valid_rows?: unknown; validRows?: unknown }).valid_rows ?? (row as { validRows?: unknown }).validRows ?? 0),
-      invalidRows: Number((row as { invalid_rows?: unknown; invalidRows?: unknown }).invalid_rows ?? (row as { invalidRows?: unknown }).invalidRows ?? 0),
-      importedAt: String((row as { created_at?: unknown; imported_at?: unknown; importedAt?: unknown }).created_at ?? (row as { imported_at?: unknown }).imported_at ?? (row as { importedAt?: unknown }).importedAt ?? now),
-    }));
+      return (Array.isArray(data) ? data : []).map((row) => ({
+        id: String((row as { id?: unknown }).id ?? ''),
+        type: String((row as { type?: unknown }).type ?? 'sales'),
+        totalRows: Number((row as { total_rows?: unknown; totalRows?: unknown }).total_rows ?? (row as { totalRows?: unknown }).totalRows ?? 0),
+        validRows: Number((row as { valid_rows?: unknown; validRows?: unknown }).valid_rows ?? (row as { validRows?: unknown }).validRows ?? 0),
+        invalidRows: Number((row as { invalid_rows?: unknown; invalidRows?: unknown }).invalid_rows ?? (row as { invalidRows?: unknown }).invalidRows ?? 0),
+        importedAt: String(
+          (row as { created_at?: unknown; imported_at?: unknown; importedAt?: unknown }).created_at
+            ?? (row as { imported_at?: unknown }).imported_at
+            ?? (row as { importedAt?: unknown }).importedAt
+            ?? now,
+        ),
+      }));
+    } catch {
+      return [];
+    }
   },
 };

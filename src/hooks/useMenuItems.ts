@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { menuService } from '@/services/menuService';
+import { getErrorMessage } from '@/lib/errors';
 import type { MenuItem } from '@/types/menuItem';
 
 export const useMenuItems = () => {
@@ -14,7 +15,7 @@ export const useMenuItems = () => {
       setItems(await menuService.getMenuItems());
     } catch (loadError) {
       console.error('Failed to load menu items', loadError);
-      setError('Unable to load menu items.');
+      setError(getErrorMessage(loadError, 'Unable to load menu items.'));
     } finally {
       setLoading(false);
     }

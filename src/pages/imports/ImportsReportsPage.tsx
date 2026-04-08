@@ -15,7 +15,7 @@ export const ImportsReportsPage = () => {
     <div className="space-y-4">
       <section className="rounded-lg border bg-white dark:bg-slate-800 p-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Imports & Reports</h2>
+          <h2 className="text-lg font-semibold">Import Sales Data</h2>
           <p className="text-sm text-[#6B7280]">Upload sales CSV files, review validation results, and track import jobs.</p>
         </div>
         <DateRangeFilter value={range} onChange={setRange} />

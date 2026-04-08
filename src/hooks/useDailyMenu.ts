@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { dailyMenuService } from '@/services/dailyMenuService';
+import { getErrorMessage } from '@/lib/errors';
 import type { DailyMenu } from '@/types/dailyMenu';
 
 export const useDailyMenu = () => {
@@ -16,7 +17,7 @@ export const useDailyMenu = () => {
       setMenu(await dailyMenuService.getDailyMenu(menuDate));
     } catch (loadError) {
       console.error('Failed to load daily menu', loadError);
-      setError('Unable to load daily menu.');
+      setError(getErrorMessage(loadError, 'Unable to load daily menu.'));
     } finally {
       setLoading(false);
     }

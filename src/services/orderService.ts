@@ -1,21 +1,25 @@
-import { supabase } from '@/lib/supabase';
-import { asRecord, mapCustomerProfileRow, mapOrderItemRow, mapOrderRow, mapOrderStatusHistoryRow } from '@/lib/mappers';
+import { AppError, normalizeError } from '@/lib/errors';
+import { mapCustomerProfileRow, mapOrderItemRow, mapOrderRow, mapOrderStatusHistoryRow } from '@/lib/mappers';
+import { requireSupabaseClient } from '@/lib/supabase';
 import type { DateRangePreset } from '@/types/dashboard';
 import type { Order, OrderFilters, OrderStatus } from '@/types/order';
 
 const asDbError = (error: unknown, fallback = 'Database request failed.') => {
-  const record = asRecord(error) ?? {};
-  const message = record.message;
-  const code = record.code;
-  if (code === '54001' || (typeof message === 'string' && /stack depth limit exceeded/i.test(message))) {
-    return new Error(
-      "Supabase failed to load order data (Postgres error 54001: stack depth limit exceeded). This is usually caused by a recursive Row Level Security (RLS) policy on the 'orders'/'order_items' tables. Fix the RLS policies in Supabase.",
-    );
+  const normalized = normalizeError(error, { fallbackMessage: fallback });
+  if (normalized.code === '54001' || /stack depth limit exceeded/i.test(normalized.message)) {
+    return new AppError({
+      category: 'backend',
+      code: normalized.code,
+      status: normalized.status,
+      details: normalized.details,
+      hint: normalized.hint,
+      cause: error,
+      message:
+        "Supabase failed to load order data (Postgres error 54001: stack depth limit exceeded). This is usually caused by a recursive Row Level Security (RLS) policy on the 'orders'/'order_items' tables. Fix the RLS policies in Supabase.",
+    });
   }
 
-  if (typeof message === 'string' && message.trim()) return new Error(message);
-  if (error instanceof Error && error.message.trim()) return new Error(error.message);
-  return new Error(fallback);
+  return normalized;
 };
 
 const rangeToDays: Record<Exclude<DateRangePreset, 'all'>, number> = {
@@ -43,13 +47,15 @@ const rangeStartIso = (range: DateRangePreset): string | null => {
 };
 
 const requireUserId = async () => {
+  const supabase = requireSupabaseClient();
   const { data, error } = await supabase.auth.getUser();
   if (error) throw asDbError(error, 'Unable to load session.');
-  if (!data.user) throw new Error('You must be signed in.');
+  if (!data.user) throw new AppError({ category: 'auth', message: 'You must be signed in.' });
   return data.user.id;
 };
 
 const attachOrderRelations = async (orders: Array<ReturnType<typeof mapOrderRow>>): Promise<Order[]> => {
+  const supabase = requireSupabaseClient();
   const orderIds = orders.map((o) => o.id).filter(Boolean);
   const customerIds = orders.map((o) => o.customerId).filter((id): id is string => Boolean(id));
 
@@ -83,6 +89,7 @@ const attachOrderRelations = async (orders: Array<ReturnType<typeof mapOrderRow>
 };
 
 const fetchOrderById = async (orderId: string): Promise<Order> => {
+  const supabase = requireSupabaseClient();
   const { data: orderRow, error: orderError } = await supabase.from('orders').select('*').eq('id', orderId).maybeSingle();
   if (orderError) throw asDbError(orderError, 'Unable to load order.');
   if (!orderRow) throw new Error('Order not found.');
@@ -109,6 +116,7 @@ const fetchOrderById = async (orderId: string): Promise<Order> => {
 
 export const orderService = {
   async getOrders(filters?: OrderFilters): Promise<Order[]> {
+    const supabase = requireSupabaseClient();
     const range = filters?.range ?? '30d';
     const status = filters?.status ?? 'all';
     const queryText = filters?.query?.trim() ?? '';
@@ -132,6 +140,7 @@ export const orderService = {
   },
 
   async confirmPayment(orderId: string): Promise<Order> {
+    const supabase = requireSupabaseClient();
     const { error } = await supabase
       .from('orders')
       .update({ payment_status: 'paid', updated_at: new Date().toISOString() })
@@ -142,6 +151,7 @@ export const orderService = {
   },
 
   async updateOrderStatus(orderId: string, status: OrderStatus): Promise<Order> {
+    const supabase = requireSupabaseClient();
     const userId = await requireUserId();
     const changedAt = new Date().toISOString();
 

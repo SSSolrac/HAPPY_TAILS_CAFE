@@ -1,15 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ingredientService } from '@/services/ingredientService';
+import { getErrorMessage } from '@/lib/errors';
 import type { Ingredient } from '@/types/ingredient';
 
 export const useIngredients = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       setIngredients(await ingredientService.listIngredients());
+    } catch (loadError) {
+      console.error('Failed to load ingredients', loadError);
+      setIngredients([]);
+      setError(getErrorMessage(loadError, 'Unable to load ingredients.'));
     } finally {
       setLoading(false);
     }
@@ -28,5 +35,5 @@ export const useIngredients = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  return { ingredients, loading, saveIngredient, deleteIngredient, refresh: load };
+  return { ingredients, loading, error, saveIngredient, deleteIngredient, refresh: load };
 };

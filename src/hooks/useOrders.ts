@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { orderService } from '@/services/orderService';
 import { notificationService } from '@/services/notificationService';
+import { getErrorMessage } from '@/lib/errors';
 import type { DateRangePreset } from '@/types/dashboard';
 import type { Order, OrderStatus } from '@/types/order';
 
@@ -46,8 +47,7 @@ export const useOrders = () => {
       });
     } catch (loadError) {
       console.error('Failed to load orders', loadError);
-      const message = loadError instanceof Error && loadError.message.trim() ? loadError.message : 'Unable to load orders.';
-      setError(message);
+      setError(getErrorMessage(loadError, 'Unable to load orders.'));
     } finally {
       setLoading(false);
     }
